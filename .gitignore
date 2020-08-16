@@ -1,6 +1,12 @@
 # Created by https://www.toptal.com/developers/gitignore/api/vim,jupyternotebooks,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=vim,jupyternotebooks,macos
 
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
 ### JupyterNotebooks ###
 # gitignore template for Jupyter Notebooks
 # website: http://jupyter.org/
