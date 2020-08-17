@@ -9,7 +9,8 @@ class ResidualBlock(nn.Module):
 
         model = [
             Conv2DBlock(batch_momentum=batch_momentum, activation_type=ActivationType.RELU),
-            Conv2DBlock(batch_momentum=batch_momentum, activation_type=ActivationType.NONE)
+            Conv2DBlock(in_channels=256, out_channels=3, batch_momentum=batch_momentum,
+                        activation_type=ActivationType.NONE)
         ]
 
         self.model = nn.Sequential(*model)
