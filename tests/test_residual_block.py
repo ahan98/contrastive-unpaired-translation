@@ -6,7 +6,7 @@ sys.path.append(parentdir)
 import torch
 from models.residual_block import ResidualBlock
 
-def make_residual_block():
+def test():
     in_N, in_C, in_H, in_W = 2, 3, 256, 256  # input shape
     res_block_fn = ResidualBlock(in_C)
     sample_in = torch.zeros((in_N, in_C, in_H, in_W))
@@ -39,4 +39,4 @@ def make_residual_block():
     return True
 
 if __name__ == "__main__":
-    make_residual_block()
+    test()
