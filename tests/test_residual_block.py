@@ -32,7 +32,7 @@ def test():
             ("Output image width must match input image width.\n"
              + "Input image width: {w_in}\n"
              + "Output image width: {w_out}")
-            .format(h_in=in_W, h_out=out_W)
+            .format(w_in=in_W, w_out=out_W)
         )
 
     print("Residual block test passed")

@@ -2,9 +2,9 @@ import torch.nn as nn
 from .typing import NormalizationType, ActivationType, PaddingMode, padding_mode_to_str
 
 class Conv2DBlock(nn.Module):
-    def __init__(self, in_channels=3, out_channels=256, kernel_size=3, 
+    def __init__(self, in_channels=3, out_channels=256, kernel_size=3,
                  stride=1, padding=1, padding_mode=PaddingMode.REFLECT, batch_momentum=0.1,
-                 normilzation_type=NormalizationType.BATCH, activation_type=ActivationType.RELU):
+                 normalization_type=NormalizationType.BATCH, activation_type=ActivationType.RELU):
         super().__init__()
 
         padding_mode = padding_mode_to_str(padding_mode)
@@ -17,9 +17,9 @@ class Conv2DBlock(nn.Module):
         # then we don't have to do this weird switch thing everywhere that takes norm and activation types as an argument
 
         # Normalization layer
-        if normilzation_type == NormalizationType.BATCH:
+        if normalization_type == NormalizationType.BATCH:
             model += [nn.BatchNorm2d(out_channels, momentum=batch_momentum)]
-        elif normilzation_type == NormalizationType.INSTANCE:
+        elif normalization_type == NormalizationType.INSTANCE:
             model += [nn.InstanceNorm2d(out_channels, momentum=batch_momentum)]
 
         # Activation layer
