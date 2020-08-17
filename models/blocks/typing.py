@@ -2,14 +2,20 @@ from enum import Enum
 
 ''' ENUMS '''
 class NormalizationType(Enum):
-    INSTANCE = 0
-    BATCH = 1
+    NONE = 0
+    INSTANCE = 1
+    BATCH = 2
 
 class PaddingMode(Enum):
     ZEROS = 0
     REFLECT = 1
     REPLICATE = 2
     CIRCULAR = 4
+
+class ActivationType(Enum):
+    NONE = 0
+    RELU = 1
+    TANH = 2
 
 ''' UTIL FUNCTIONS '''
 

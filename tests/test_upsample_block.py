@@ -4,11 +4,11 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import torch
-from models.upsample_block import UpsampleBlock
+from models.blocks.UpsamplingBlock import UpsamplingBlock
 
 def test(out_channels=64):
     in_N, in_C, in_H, in_W = 2, 3, 256, 256
-    upsample_block_fn = UpsampleBlock(in_C, out_channels)
+    upsample_block_fn = UpsamplingBlock(in_C, out_channels)
     sample_in = torch.zeros((in_N, in_C, in_H, in_W))
     block = upsample_block_fn(sample_in)
     out_N, out_C, out_H, out_W = block.shape
