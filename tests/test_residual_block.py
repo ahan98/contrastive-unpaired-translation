@@ -4,7 +4,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import torch
-from models.residual_block import ResidualBlock
+from models.blocks.ResidualBlock import ResidualBlock
 
 def test():
     in_N, in_C, in_H, in_W = 2, 3, 256, 256  # input shape

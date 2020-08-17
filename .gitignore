@@ -70,4 +70,7 @@ tags
 # Persistent undo
 [._]*.un~
 
+# XCode
+*.xcodeproj
+
 # End of https://www.toptal.com/developers/gitignore/api/vim,jupyternotebooks,macos
