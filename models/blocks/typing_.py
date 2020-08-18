@@ -1,7 +1,7 @@
 from enum import Enum
 
 ''' ENUMS '''
-class NormalizationType(Enum):
+class NormType(Enum):
     NONE = 0
     INSTANCE = 1
     BATCH = 2
@@ -10,12 +10,13 @@ class PaddingMode(Enum):
     ZEROS = 0
     REFLECT = 1
     REPLICATE = 2
-    CIRCULAR = 4
+    CIRCULAR = 3
 
 class ActivationType(Enum):
     NONE = 0
     RELU = 1
     TANH = 2
+    LEAKY = 3
 
 ''' UTIL FUNCTIONS '''
 
