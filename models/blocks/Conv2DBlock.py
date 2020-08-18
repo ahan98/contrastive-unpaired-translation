@@ -6,15 +6,16 @@ from .NormLayer import NormLayer
 from .ActivationLayer import ActivationLayer
 
 class Conv2DBlock(nn.Module):
-    def __init__(self, in_channels=3, out_channels=256, kernel_size=3,
-                 stride=1, padding=1, padding_mode=PaddingMode.REFLECT, batch_momentum=0.1,
-                 norm_type=NormType.INSTANCE, activation_type=ActivationType.RELU):
+    def __init__(self, in_channels=3, out_channels=256, kernel_size=3, stride=1,
+                 padding=1, padding_mode=PaddingMode.REFLECT,
+                 batch_momentum=0.1, norm_type=NormType.INSTANCE,
+                 activation_type=ActivationType.RELU):
 
         super().__init__()
         padding_mode = padding_mode_to_str(padding_mode)
 
-        # BatchNorm uses learnable affine parameters, which includes its own bias term, so only use
-        # bias for InstanceNorm.
+        # BatchNorm uses learnable affine parameters, which includes its own
+        # bias term, so only use bias for InstanceNorm.
         use_bias = (norm_type == NormType.INSTANCE)
 
         # Conv layer
