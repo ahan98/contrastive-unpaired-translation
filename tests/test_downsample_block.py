@@ -4,15 +4,15 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import torch
-from models.blocks.UpsamplingBlock import UpsamplingBlock
+from models.blocks.DownsamplingBlock import DownsamplingBlock
 
 def test():
-    in_N, in_C, in_H, in_W = 2, 3, 256, 256
+    in_N, in_C, in_H, in_W = 2, 3, 256, 256  # note we assume even in_H and in_W
     out_C = 128
-    upsample_block_fn = UpsamplingBlock(in_C, out_C)
+    downsample_block_fn = DownsamplingBlock(in_C, out_C)
     sample_in = torch.zeros((in_N, in_C, in_H, in_W))
-    out = upsample_block_fn(sample_in)
-    expected_shape = (in_N, out_C, 2 * in_H, 2 * in_W)
+    out = downsample_block_fn(sample_in)
+    expected_shape = (in_N, out_C, 0.5 * in_H, 0.5 * in_W)
 
     if out.shape != expected_shape:
         raise RuntimeError(
@@ -22,7 +22,7 @@ def test():
             .format(in_shape=expected_shape, out_shape=out.shape)
         )
 
-    print("Upsample block test passed")
+    print("Downsample block test passed")
     return True
 
 if __name__ == "__main__":
