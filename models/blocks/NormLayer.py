@@ -7,11 +7,9 @@ class NormLayer(nn.Module):
 
         # Norm layer
         if norm_type == NormType.BATCH:
-            model = nn.BatchNorm2d(out_channels, momentum=batch_momentum)
-        elif norm_type == NormType.INSTANCE:
-            model = nn.InstanceNorm2d(out_channels, momentum=batch_momentum)
-
-        self.model = model
+            self.model = nn.BatchNorm2d(out_channels, momentum=batch_momentum)
+        else:
+            self.model = nn.InstanceNorm2d(out_channels, momentum=batch_momentum)
 
     def forward(self, x):
         out = self.model(x)
