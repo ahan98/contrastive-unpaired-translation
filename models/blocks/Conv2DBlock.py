@@ -1,25 +1,34 @@
 import torch.nn as nn
-from .typing import NormalizationType, ActivationType, PaddingMode, padding_mode_to_str
-from .NormBlock import NormBlock
+import torchvision.transforms as T
+
+from .typing_ import NormType, ActivationType, PaddingMode, padding_mode_to_str
+from .NormLayer import NormLayer
+from .ActivationLayer import ActivationLayer
 
 class Conv2DBlock(nn.Module):
     def __init__(self, in_channels=3, out_channels=256, kernel_size=3,
                  stride=1, padding=1, padding_mode=PaddingMode.REFLECT, batch_momentum=0.1,
-                 normalization_type=NormalizationType.BATCH, activation_type=ActivationType.RELU):
-        super().__init__()
+                 norm_type=NormType.INSTANCE, activation_type=ActivationType.RELU):
 
+        super().__init__()
         padding_mode = padding_mode_to_str(padding_mode)
 
+        # BatchNorm uses learnable affine parameters, which includes its own bias term, so only use
+        # bias for InstanceNorm.
+        use_bias = (norm_type == NormType.INSTANCE)
+
+        # Conv layer
         model = [
-            nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, padding_mode=padding_mode)
+            nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding,
+                      padding_mode=padding_mode, bias=use_bias)
         ]
 
-        # Normalization layer
-        model += [NormBlock(out_channels, batch_momentum, normalization_type)]
+        # Norm layer
+        model += [NormLayer(norm_type, out_channels, batch_momentum)]
 
         # Activation layer
-        if activation_type == ActivationType.RELU:
-            model += [nn.ReLU()]
+        if activation_type != ActivationType.NONE:
+            model += [ActivationLayer(activation_type)]
 
         self.model = nn.Sequential(*model)
 
