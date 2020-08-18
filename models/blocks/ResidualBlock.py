@@ -1,15 +1,18 @@
 import torch.nn as nn
 from .Conv2DBlock import Conv2DBlock
-from .typing import ActivationType
+from .typing_ import ActivationType, NormType, PaddingMode
 
 ''' (3x3 Convolution)-(BatchNorm)-(ReLU)-(3x3 Convolution)-(BatchNorm) '''
 class ResidualBlock(nn.Module):
-    def __init__(self, batch_momentum=0.1):
+    def __init__(self, in_channels=256, padding_mode=PaddingMode.REFLECT, batch_momentum=0.1):
         super().__init__()
 
         model = [
-            Conv2DBlock(batch_momentum=batch_momentum, activation_type=ActivationType.RELU),
-            Conv2DBlock(in_channels=256, out_channels=3, batch_momentum=batch_momentum,
+            Conv2DBlock(in_channels=in_channels, out_channels=256, batch_momentum=batch_momentum,
+                        activation_type=ActivationType.RELU, norm_type=NormType.BATCH,
+                        padding_mode=padding_mode),
+            Conv2DBlock(in_channels=256, out_channels=in_channels, batch_momentum=batch_momentum,
+                        norm_type=NormType.BATCH, padding_mode=padding_mode,
                         activation_type=ActivationType.NONE)
         ]
 
