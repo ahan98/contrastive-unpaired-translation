@@ -44,45 +44,46 @@ class Encoder(nn.Module):
         second downsampling convolution, and the ﬁrst and the ﬁfth residual
         block. [...] For each layer’s features, we sample 256 random locations.
         """
+
         samples = {}
 
         # sample RGB pixels
-        samples["rgb"] = sample_tensor(x, self.sample_size)
+        samples["rgb"] = get_samples(x, self.sample_size)
 
         out = self.conv(x)
         # print("shape after reflect and first conv", out.shape)
 
         out = self.dsample1(out)
-        samples["dsample1"] = sample_tensor(out, self.sample_size)
+        samples["dsample1"] = get_samples(out, self.sample_size)
         # print("shape after first downsample", out.shape)
 
         out = self.dsample2(out)
-        samples["dsample2"] = sample_tensor(out, self.sample_size)
+        samples["dsample2"] = get_samples(out, self.sample_size)
         # print("shape after second downsample", out.shape)
 
         for block_idx, res_block in enumerate(self.res_blocks):
             out = res_block(out)
             if block_idx == 0:
-                samples["res_block0"] = sample_tensor(out, self.sample_size)
+                samples["res_block0"] = get_samples(out, self.sample_size)
             elif block_idx == 4:
-                samples["res_block4"] = sample_tensor(out, self.sample_size)
+                samples["res_block4"] = get_samples(out, self.sample_size)
             # print("shape after res block", block_idx, out.shape)
 
         return out, samples
 
-def sample_tensor(tensor, sample_size, replacement=False):
+def get_samples(tensor, sample_size):
     """ Return a random sample of sample_size values from tensor. """
 
-    assert type(tensor) == torch.Tensor
+    assert type(tensor) == torch.Tensor and len(tensor.shape) == 4
 
-    flat = tensor.reshape(-1)  # flatten tensor into 1D
-    size = len(flat)
-    if replacement:
-        # generate sample_size ints from [0, size)
-        idxs = torch.randint(size, (sample_size,))
-    else:
-        # shuffle [0, size), then pick the first sample_size indices
-        idxs = torch.randperm(size)[:sample_size]
+    # Reshape from (N,C,H,W) to (N, H*W, C)
+    tensor_reshape = tensor.permute(0, 2, 3, 1).flatten(1, 2)
 
-    sample = flat[idxs]
-    return sample
+    _, _, H, W = tensor.shape  # we don't explicitly need N and C
+    spatial_idxs = torch.randperm(H * W)[:sample_size]
+
+    # Extract all S sampled spatial locations across all channels and batch
+    # items. Then flatten the (N, S, C) tensor into (N*S, C).
+    samples = tensor_reshape[:, spatial_idxs, :].flatten(0, 1)
+
+    return samples

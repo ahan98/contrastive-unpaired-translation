@@ -29,12 +29,16 @@ def test():
             .format(expected_layers_sampled, len(samples))
         )
 
-    expected_n_samples = 256
+    sample_size = 256
     for layer_name in samples:
-        if len(samples[layer_name]) != expected_n_samples:
+        sample = samples[layer_name]
+        print("sample shape for layer {}: {}".format(layer_name, sample.shape))
+        if (len(sample.shape) != 2) or (sample.shape[0] % sample_size != 0):
             raise RuntimeError(
-                ("Incorrect number of samples in layer {}. Expected {}, got {}")
-                .format(layer_name, expected_n_samples, len(samples))
+                ("Incorrect sample shape in layer {}.\n"
+                 + "Sample shape must be 2-dimensional.\n"
+                 + "First dimension must be a multiple of {}, but got {}")
+                .format(layer_name, sample_size, sample.shape[0])
             )
 
     print("Encoder test passed")
