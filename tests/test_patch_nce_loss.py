@@ -4,14 +4,13 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import torch
-from loss.PatchNCELoss import PatchNCELoss
+from loss.patch_nce_loss import patch_nce_loss
 
 def test():
     N, C, S = 1, 64, 256
     feat_x = torch.zeros((N, C, S))
     feat_gx = torch.zeros((N, C, S))
-    loss_fn = PatchNCELoss()
-    loss = loss_fn(feat_x, feat_gx, verbose=True)
+    loss = patch_nce_loss(feat_x, feat_gx, verbose=True)
 
     expected_shape = torch.Size([N * S])
     if loss.shape != expected_shape:
