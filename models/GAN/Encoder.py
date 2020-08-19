@@ -76,14 +76,14 @@ def get_samples(tensor, sample_size):
 
     assert type(tensor) == torch.Tensor and len(tensor.shape) == 4
 
-    # Reshape from (N,C,H,W) to (N, H*W, C)
-    tensor_reshape = tensor.permute(0, 2, 3, 1).flatten(1, 2)
+    # Reshape from (N,C,H,W) to (N, C, H*W)
+    tensor_reshape = tensor.flatten(2, 3)
 
     _, _, H, W = tensor.shape  # we don't explicitly need N and C
     spatial_idxs = torch.randperm(H * W)[:sample_size]
 
     # Extract all S sampled spatial locations across all channels and batch
-    # items. Then flatten the (N, S, C) tensor into (N*S, C).
-    samples = tensor_reshape[:, spatial_idxs, :].flatten(0, 1)
+    # items.
+    samples = tensor_reshape[:, :, spatial_idxs]
 
     return samples
