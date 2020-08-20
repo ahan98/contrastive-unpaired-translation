@@ -3,11 +3,24 @@ import torch.nn as nn
 from torch.nn.functional import cross_entropy
 
 def train_P(P, solver, real_data, fake_data):
+    """
+    Trains PatchNCE network on real and fake data, and computes its loss.
+
+    Inputs:
+    - [nn.Module] P: PatchNCE network
+    - [torch.optim] solver: SGD optimizer
+    - [torch.Tensor] real_data: tensor of sample from real dataset
+    - [torch.Tensor] fake_data: tensor of sample generated from noise
+
+    Returns PatchNCE loss.
+    """
     solver.zero_grads()
 
+    # Extract features from the encoder sub-network.
     _, real_features = P(real_data)
     _, fake_features = P(fake_data)
 
+    # Use encoder features to compute loss.
     loss = patch_nce_loss(real_features, fake_features)
     loss.backward()
 
@@ -27,7 +40,7 @@ def patch_nce_loss(feat_x, feat_gx, tau=0.07, verbose=False):
     entropy of cosine similarities between the generated and positive input
     patches, and the generated and negative input patches.
 
-    See equations 2, 3, and 5 of the paper.
+    See equations 2, 3, and 5 of Park et al.
 
     Note that the original input image may be sampled from either the domain
     x (e.g., horse) or domain y (e.g., zebra). If sampled from y, the loss
