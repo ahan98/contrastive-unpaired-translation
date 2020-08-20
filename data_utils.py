@@ -1,9 +1,7 @@
 import torchvision.transforms as T
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, IterableDataset
 from torchvision.datasets import ImageFolder
 from collections import defaultdict
-from .BatchDataset import BatchDataset
-
 
 def folder_to_tensors(root, X_name, Y_name, image_size=256):
     """
@@ -61,4 +59,21 @@ def shuffled_data_loader(dataset):
     dataset whenever all images in the set have been iterated through.
     """
     data_loader = DataLoader(dataset, shuffle=True)
+
+
+class BatchDataset(IterableDataset):
+    """
+    A simple class that wraps a batch of 4-D tensors into an IterableDataset.
+    """
+
+    def __init__(self, *tensors):
+        super().__init__()
+        self.tensors = tensors
+
+    def __getitem__(self, index):
+        return self.tensors[index]
+
+    def __len__(self):
+        return len(self.tensors)
+
     return data_loader

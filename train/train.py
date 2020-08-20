@@ -9,7 +9,7 @@ from models.GAN.Generator import Generator
 from models.PatchNCE.PatchNCE import PatchNCE
 from .train_fns.GAN_fns import train_D, train_G
 from .train_fns.patch_nce_fns import train_P
-from data_utils.process_data import shuffled_data_loader
+from data_utils import shuffled_data_loader
 
 # TODO: write logger
 
