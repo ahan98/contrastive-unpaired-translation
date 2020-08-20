@@ -4,7 +4,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import torch.nn as nn
-from blocks.typing_ import ActivationType
+from blocks.types import ActivationType
 from blocks.ActivationLayer import ActivationLayer
 
 class MLP(nn.Module):
@@ -13,10 +13,14 @@ class MLP(nn.Module):
     def __init__(self, in_channels=256, out_channels=256,
                  activation_type=ActivationType.RELU):
         super().__init__()
-        sequence = [nn.Linear(in_channels, out_channels)]
-        sequence += [ActivationLayer(activation_type)]
-        sequence += [nn.Linear(out_channels, out_channels)]
-        self.model = nn.Sequential(*sequence)
+
+        model = [
+            nn.Linear(in_channels, out_channels),
+            ActivationLayer(activation_type),
+            nn.Linear(out_channels, out_channels)
+        ]
+
+        self.model = nn.Sequential(*model)
 
     def forward(self, x):
         out = self.model(x)

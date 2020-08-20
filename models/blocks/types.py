@@ -16,7 +16,7 @@ class ActivationType(Enum):
     NONE = 0
     RELU = 1
     TANH = 2
-    LEAKY = 3
+    LEAKY_RELU = 3
 
 ''' UTIL FUNCTIONS '''
 

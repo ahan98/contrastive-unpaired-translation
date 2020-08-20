@@ -1,5 +1,5 @@
 import torch.nn as nn
-from .typing_ import NormType, ActivationType
+from .types import NormType, ActivationType
 from .NormLayer import NormLayer
 from .ActivationLayer import ActivationLayer
 
@@ -11,12 +11,13 @@ class ConvTranspose2DBlock(nn.Module):
         stride = up_factor
 
         model = [
+            # Conv transpose layer
             nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding,
-                               output_padding=1)
-        ]
+                               output_padding=1),
 
-        # Norm layer
-        model += [NormLayer(NormType.INSTANCE, out_channels, batch_momentum)]
+            # Norm layer
+            NormLayer(NormType.INSTANCE, out_channels, batch_momentum)
+        ]
 
         # Activation layer
         if activation_type != ActivationType.NONE:
