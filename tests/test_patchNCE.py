@@ -5,10 +5,12 @@ sys.path.append(parentdir)
 
 import torch
 from models.PatchNCE.PatchNCE import PatchNCE
+from models.GAN.Encoder import Encoder
 
 def test():
     in_N, in_C, in_H, in_W = 1, 3, 256, 256  # note we assume 256x256 images
-    patch_nce_fn = PatchNCE()
+    encoder = Encoder()
+    patch_nce_fn = PatchNCE(encoder)
     sample_in = torch.zeros((in_N, in_C, in_H, in_W))
     features_final = patch_nce_fn(sample_in)
 

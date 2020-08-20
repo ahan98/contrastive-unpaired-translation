@@ -12,7 +12,5 @@ def test():
     sample_in = torch.zeros((in_N, in_C, in_H, in_W))
     out, samples = encoder_fn(sample_in)
 
-
-
 if __name__ == "__main__":
     test()

@@ -10,7 +10,7 @@ class PatchNCETrainer:
         _, real_features = patchNCE(real_data)
         _, fake_features = patchNCE(fake_data)
 
-        loss = PatchNCETrainer.__patchNCE_loss(real_features, fake_features)
+        loss = PatchNCETrainer._patchNCE_loss(real_features, fake_features)
         loss.backward()
 
         solver.step()
@@ -18,7 +18,7 @@ class PatchNCETrainer:
         return loss
 
     @staticmethod
-    def __patchNCE_loss(feat_x, feat_gx, tau=0.07, verbose=False):
+    def _patchNCE_loss(feat_x, feat_gx, tau=0.07, verbose=False):
         """
         Computes the patchwise contrastive loss between sampled feature maps
         from H(G_enc(x)) and sampled feature maps from H(G_enc(G(x))).

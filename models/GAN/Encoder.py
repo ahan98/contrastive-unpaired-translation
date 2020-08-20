@@ -33,9 +33,7 @@ class Encoder(nn.Module):
 
         self.res_blocks = []
         for _ in range(n_res_blocks):
-            self.res_blocks += [
-                ResidualBlock(padding_mode=padding_mode, batch_momentum=batch_momentum)
-            ]
+            self.res_blocks += [ResidualBlock(padding_mode=padding_mode, batch_momentum=batch_momentum)]
 
     def forward(self, x):
         """

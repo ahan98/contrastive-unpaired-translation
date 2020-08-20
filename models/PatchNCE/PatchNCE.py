@@ -16,5 +16,5 @@ class PatchNCE(nn.Module):
 
     def forward(self, x):
         _, samples = self.encoder(x)
-        features_final = {layer_key: self.MLP(layer_samples) for layer_key, layer_samples in samples}
+        features_final = {layer_key: self.MLP(samples[layer_key]) for layer_key in samples}
         return features_final
