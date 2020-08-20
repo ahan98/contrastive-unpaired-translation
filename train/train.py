@@ -6,7 +6,7 @@ sys.path.append(parentdir)
 from models.GAN.Discriminator import Discriminator
 from models.GAN.Generator import Generator
 from models.PatchNCE.PatchNCE import PatchNCE
-from data_utils import random_data_loader
+from data_utils.process_data import shuffled_data_loader
 from .train_fns.GAN_fns import train_D, train_G
 from .train_fns.patch_fns import train_P
 from .train_fns.utils import make_noise
@@ -25,7 +25,7 @@ def train(X_dataset, Y_dataset, n_epochs=400, n_steps_D=1, lr=2e-3, print_every=
     solver_G = optim.Adam(G.parameters(), lr=lr)
     solver_P = optim.Adam(P.parameters(), lr=lr)
 
-    data_loader_Y = random_data_loader(Y_dataset)
+    data_loader_Y = shuffled_data_loader(Y_dataset)
     Y_iter = iter(data_loader_Y)
 
     for epoch in range(n_epochs):
@@ -44,6 +44,7 @@ def train(X_dataset, Y_dataset, n_epochs=400, n_steps_D=1, lr=2e-3, print_every=
             loss_P = train_P(P, solver_P, real_X, fake_X)
 
             # get random sample from Y, treating it as the "real" data
+            # reset (and re-shuffle) Dataloader if no remaining Y samples
             try:
                 real_Y = next(Y_iter)
             except StopIteration:
