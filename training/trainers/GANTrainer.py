@@ -67,11 +67,27 @@ class GANTrainer:
     ''' Private Static Methods '''
 
     @staticmethod
-    def __discriminator_loss(real_data, fake_data):
-        loss = torch.mean((real_data - 1)**2) + torch.mean(fake_data**2)
-        return -0.5 * loss
+    def __discriminator_loss(predictions_real, predictions_fake):
+        """
+        Inputs:
+        - [torch.Tensor] predictions_real: output of discriminator given sample
+          from real dataset
+        - [torch.Tensor] predictions_fake: output of discriminator given
+          generated sample from noise
+
+        Returns least squares loss. See section 3.2 of Mao et al.
+        """
+        loss = torch.mean((predictions_real - 1)**2) + torch.mean(predictions_fake**2)
+        return 0.5 * loss
 
     @staticmethod
-    def __generator_loss(fake_data):
-        loss = torch.mean((fake_data - 1)**2)
-        return -0.5 * loss
+    def __generator_loss(predictions_fake):
+        """
+        Inputs:
+        - [torch.Tensor] predictions_fake: output of discriminator given
+          generated sample from noise
+
+        Returns least squares loss.
+        """
+        loss = torch.mean((predictions_fake - 1)**2)
+        return 0.5 * loss
