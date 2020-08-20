@@ -34,7 +34,9 @@ def test():
         sample = samples[layer_name]
         print("sample shape for layer {}: {}".format(layer_name, sample.shape))
 
-        if (sample.shape[0] != in_N) or (sample.shape[2] != sample_size):
+        out_N = sample.shape[0]
+        out_feature_size = sample.shape[2]
+        if (out_N != in_N) or (out_feature_size != sample_size):
             raise RuntimeError(
                 ("Incorrect sample shape in layer {}.\n"
                  + "Expected {}, got {}")
