@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torchvision.transforms as T
 
-from .typing_ import NormType, ActivationType, PaddingMode, padding_mode_to_str
+from .types import NormType, ActivationType, PaddingMode, padding_mode_to_str
 from .NormLayer import NormLayer
 from .ActivationLayer import ActivationLayer
 
@@ -12,20 +12,21 @@ class Conv2DBlock(nn.Module):
                  activation_type=ActivationType.RELU):
 
         super().__init__()
-        padding_mode = padding_mode_to_str(padding_mode)
 
         # BatchNorm uses learnable affine parameters, which includes its own
         # bias term, so only use bias for InstanceNorm.
         use_bias = (norm_type == NormType.INSTANCE)
 
-        # Conv layer
-        model = [
-            nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding,
-                      padding_mode=padding_mode, bias=use_bias)
-        ]
+        padding_mode_str = padding_mode_to_str(padding_mode)
 
-        # Norm layer
-        model += [NormLayer(norm_type, out_channels, batch_momentum)]
+        model = [
+            # Conv layer
+            nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding,
+                      padding_mode=padding_mode_str, bias=use_bias),
+
+            # Norm layer
+            NormLayer(norm_type, out_channels, batch_momentum)
+        ]
 
         # Activation layer
         if activation_type != ActivationType.NONE:

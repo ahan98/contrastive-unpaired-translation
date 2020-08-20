@@ -4,7 +4,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import torch
-from train.train import train
+from training.train import train
 
 def test():
     in_N, in_C, in_H, in_W = 1, 3, 256, 256  # note we assume 256x256 images

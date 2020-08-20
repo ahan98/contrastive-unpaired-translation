@@ -1,6 +1,6 @@
 import torch.nn as nn
 from .Conv2DBlock import Conv2DBlock
-from .typing_ import ActivationType, NormType, PaddingMode
+from .types import ActivationType, NormType, PaddingMode
 
 ''' (3x3 Convolution)-(BatchNorm)-(ReLU)-(3x3 Convolution)-(BatchNorm) '''
 class ResidualBlock(nn.Module):

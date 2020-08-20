@@ -7,35 +7,35 @@ import torch.nn as nn
 from blocks.ResidualBlock import ResidualBlock
 from blocks.UpsamplingBlock import UpsamplingBlock
 from blocks.Conv2DBlock import Conv2DBlock
-from blocks.typing_ import ActivationType, PaddingMode
+from blocks.types import ActivationType, PaddingMode
 
 class Decoder(nn.Module):
 
-    def __init__(self, n_res_blocks=9, batch_momentum=0.1,
-                 padding_mode=PaddingMode.REFLECT):
-
+    def __init__(self, n_res_blocks=9, batch_momentum=0.1, padding_mode=PaddingMode.REFLECT):
         super().__init__()
 
-        sequence = []
+        model = []
 
         # Residual blocks
         for _ in range(n_res_blocks):
-            sequence += [ResidualBlock(padding_mode=padding_mode,
-                                       batch_momentum=batch_momentum)]
+            model += [ResidualBlock(padding_mode=padding_mode,
+                                    batch_momentum=batch_momentum)]
 
-        # Upsample blocks
-        sequence += [UpsamplingBlock(in_channels=256, out_channels=128,
-                                  batch_momentum=batch_momentum)]
-        sequence += [UpsamplingBlock(in_channels=128, out_channels=64,
-                                  batch_momentum=batch_momentum)]
+        model += [
+            # Upsample blocks
+            UpsamplingBlock(in_channels=256, out_channels=128,
+                            batch_momentum=batch_momentum),
+            UpsamplingBlock(in_channels=128, out_channels=64,
+                            batch_momentum=batch_momentum),
 
-        # Output conv block
-        sequence += [Conv2DBlock(in_channels=64, out_channels=3, kernel_size=7,
-                                 padding=3, batch_momentum=batch_momentum,
-                                 activation_type=ActivationType.TANH,
-                                 padding_mode=padding_mode)]
+            # Output conv block
+            Conv2DBlock(in_channels=64, out_channels=3, kernel_size=7,
+                        padding=3, batch_momentum=batch_momentum,
+                        activation_type=ActivationType.TANH,
+                        padding_mode=padding_mode)
+        ]
 
-        self.model = nn.Sequential(*sequence)
+        self.model = nn.Sequential(*model)
 
     def forward(self, x):
         out = self.model(x)

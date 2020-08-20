@@ -8,7 +8,8 @@ import torch.nn as nn
 from blocks.Conv2DBlock import Conv2DBlock
 from blocks.DownsamplingBlock import DownsamplingBlock
 from blocks.ResidualBlock import ResidualBlock
-from blocks.typing_ import PaddingMode
+from blocks.types import PaddingMode
+
 
 class Encoder(nn.Module):
 
@@ -32,8 +33,9 @@ class Encoder(nn.Module):
 
         self.res_blocks = []
         for _ in range(n_res_blocks):
-            self.res_blocks += [ResidualBlock(padding_mode=padding_mode,
-                                              batch_momentum=batch_momentum)]
+            self.res_blocks += [
+                ResidualBlock(padding_mode=padding_mode, batch_momentum=batch_momentum)
+            ]
 
     def forward(self, x):
         """
@@ -48,42 +50,44 @@ class Encoder(nn.Module):
         samples = {}
 
         # sample RGB pixels
-        samples["rgb"] = get_samples(x, self.sample_size)
+        samples["rgb"] = Encoder.__make_samples_for_tensor(x, self.sample_size)
 
         out = self.conv(x)
         # print("shape after reflect and first conv", out.shape)
 
         out = self.dsample1(out)
-        samples["dsample1"] = get_samples(out, self.sample_size)
+        samples["dsample1"] = Encoder.__make_samples_for_tensor(out, self.sample_size)
         # print("shape after first downsample", out.shape)
 
         out = self.dsample2(out)
-        samples["dsample2"] = get_samples(out, self.sample_size)
+        samples["dsample2"] = Encoder.__make_samples_for_tensor(out, self.sample_size)
         # print("shape after second downsample", out.shape)
 
         for block_idx, res_block in enumerate(self.res_blocks):
             out = res_block(out)
             if block_idx == 0:
-                samples["res_block0"] = get_samples(out, self.sample_size)
+                samples["res_block0"] = Encoder.__make_samples_for_tensor(out, self.sample_size)
             elif block_idx == 4:
-                samples["res_block4"] = get_samples(out, self.sample_size)
+                samples["res_block4"] = Encoder.__make_samples_for_tensor(out, self.sample_size)
             # print("shape after res block", block_idx, out.shape)
 
         return out, samples
 
-def get_samples(tensor, sample_size):
-    """ Return a random sample of sample_size values from tensor. """
+    ''' Private '''
 
-    assert type(tensor) == torch.Tensor and len(tensor.shape) == 4
+    @staticmethod
+    def __make_samples_for_tensor(tensor, sample_size):
+        """ Return a random sample of sample_size values from tensor. """
 
-    # Reshape from (N,C,H,W) to (N, C, H*W)
-    tensor_reshape = tensor.flatten(2, 3)
+        assert type(tensor) == torch.Tensor and len(tensor.shape) == 4
 
-    _, _, H, W = tensor.shape  # we don't explicitly need N and C
-    spatial_idxs = torch.randperm(H * W)[:sample_size]
+        # Reshape from (N,C,H,W) to (N, C, H*W)
+        tensor_reshape = tensor.flatten(2, 3)
 
-    # Extract all S sampled spatial locations across all channels and batch
-    # items.
-    samples = tensor_reshape[:, :, spatial_idxs]
+        _, _, H, W = tensor.shape  # we don't explicitly need N and C
+        spatial_idxs = torch.randperm(H * W)[:sample_size]
 
-    return samples
+        # Extract all S sampled spatial locations across all channels and batch
+        # items.
+        samples = tensor_reshape[:, :, spatial_idxs]
+        return samples

@@ -4,7 +4,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import torch.nn as nn
-from blocks.typing_ import PaddingMode, NormType, ActivationType
+from blocks.types import PaddingMode, NormType, ActivationType
 from blocks.Conv2DBlock import Conv2DBlock
 
 class Discriminator(nn.Module):
@@ -21,35 +21,27 @@ class Discriminator(nn.Module):
     def __init__(self, batch_momentum=0.1, padding_mode=PaddingMode.REFLECT):
         super().__init__()
 
-        sequence = []
-        filter_sizes = [64, 128, 256, 512]
-        prev_out_channels = 3
+        def patchGANConvLayer(in_channels, out_channels, stride, norm_type):
+            return Conv2DBlock(in_channels=in_channels, stride=stride,
+                               out_channels=out_channels, kernel_size=4,
+                               activation_type=ActivationType.LEAKY_RELU,
+                               padding_mode=padding_mode, norm_type=norm_type,
+                               batch_momentum=batch_momentum)
 
-        for n_filters in filter_sizes:
+        model = [
+            patchGANConvLayer(in_channels=3, out_channels=64, stride=2, norm_type=NormType.NONE),
+            patchGANConvLayer(in_channels=64, out_channels=128, stride=2, norm_type=NormType.INSTANCE),
+            patchGANConvLayer(in_channels=128, out_channels=256, stride=2, norm_type=NormType.INSTANCE),
+            patchGANConvLayer(in_channels=256, out_channels=512, stride=1, norm_type=NormType.INSTANCE),
 
-            # skip norm layer for first conv block
-            norm_type = NormType.INSTANCE if n_filters != 64 else NormType.NONE
-            stride = 2 if n_filters != 512 else 1
-
-            sequence += [
-                Conv2DBlock(in_channels=prev_out_channels, stride=stride,
-                            out_channels=n_filters, kernel_size=4,
-                            activation_type=ActivationType.LEAKY,
-                            padding_mode=padding_mode, norm_type=norm_type,
-                            batch_momentum=batch_momentum)
-            ]
-
-            prev_out_channels = n_filters
-
-        # convolve result into one-dimensional output
-        sequence += [
-            Conv2DBlock(in_channels=prev_out_channels, out_channels=1,
+            # convolve result into one-dimensional output
+            Conv2DBlock(in_channels=512, out_channels=1,
                         kernel_size=4, padding_mode=padding_mode,
                         activation_type=ActivationType.NONE,
                         batch_momentum=batch_momentum)
         ]
 
-        self.model = nn.Sequential(*sequence)
+        self.model = nn.Sequential(*model)
 
     def forward(self, x):
         out = self.model(x)

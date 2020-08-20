@@ -4,7 +4,6 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import torch.nn as nn
-from GAN.Encoder import Encoder
 from .MLP import MLP
 
 class PatchNCE(nn.Module):
@@ -16,10 +15,6 @@ class PatchNCE(nn.Module):
         self.MLP = MLP()
 
     def forward(self, x):
-        out, samples = self.encoder(x)
-        features_final = {}
-        for layer_key in samples:
-            layer_sample = samples[layer_key]
-            features_final[layer_key] = self.MLP(layer_sample)
+        _, samples = self.encoder(x)
+        features_final = {layer_key: self.MLP(layer_samples) for layer_key, layer_samples in samples}
         return features_final
-

@@ -1,6 +1,6 @@
 import torch.nn as nn
 from .Conv2DBlock import Conv2DBlock
-from .typing_ import NormType, PaddingMode
+from .types import NormType, PaddingMode
 
 class DownsamplingBlock(nn.Module):
     def __init__(self, in_channels=64, out_channels=128,
