@@ -5,12 +5,26 @@ from torch.nn.functional import cross_entropy
 class PatchNCETrainer:
     @staticmethod
     def train_patchnce(patchNCE, solver, real_data, fake_data):
+        """
+        Trains PatchNCE network on real and fake data, and computes its loss.
+
+        Inputs:
+        - [nn.Module] patchNCE: PatchNCE network
+        - [torch.optim] solver: SGD optimizer
+        - [torch.Tensor] real_data: tensor of sample from real dataset
+        - [torch.Tensor] fake_data: tensor of sample generated from noise
+
+        Returns PatchNCE loss.
+        """
+
         solver.zero_grads()
 
+        # Extract features from the encoder sub-network.
         _, real_features = patchNCE(real_data)
         _, fake_features = patchNCE(fake_data)
 
-        loss = PatchNCETrainer._patchNCE_loss(real_features, fake_features)
+        # Use encoder features to compute loss.
+        loss = _patchNCE_loss(real_features, fake_features)
         loss.backward()
 
         solver.step()
