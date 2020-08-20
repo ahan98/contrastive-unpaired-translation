@@ -9,10 +9,10 @@ from .MLP import MLP
 
 class PatchNCE(nn.Module):
 
-    def __init__(self, batch_momentum=0.1, image_height=256, image_width=256):
+    def __init__(self, encoder, image_height=256, image_width=256):
         super().__init__()
 
-        self.encoder = Encoder(batch_momentum=batch_momentum)
+        self.encoder = encoder
         self.MLP = MLP()
 
     def forward(self, x):

@@ -13,11 +13,7 @@ def test():
     out = discriminator_fn(sample_in)
     print(out.shape)
 
-    # The discriminator performs a total of 4 convolutions (not including the
-    # convolution to produce a 1-D output), with each convolution halving the
-    # image dimensions.
     expected_shape = in_N, 1, 30, 30
-
     if out.shape != expected_shape:
         raise RuntimeError(
             ("Incorrect output shape.\n"

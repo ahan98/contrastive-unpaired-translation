@@ -2,6 +2,20 @@ import torch
 import torch.nn as nn
 from torch.nn.functional import cross_entropy
 
+def train_P(P, solver, real_data, fake_data):
+    solver.zero_grads()
+
+    _, real_features = P(real_data)
+    _, fake_features = P(fake_data)
+
+    loss = patch_nce_loss(real_features, fake_features)
+    loss.backward()
+
+    solver.step()
+
+    return loss
+
+
 def patch_nce_loss(feat_x, feat_gx, tau=0.07, verbose=False):
     """
     Computes the patchwise contrastive loss between sampled feature maps
