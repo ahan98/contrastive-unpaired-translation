@@ -11,10 +11,7 @@ from models.PatchNCE.PatchNCE import PatchNCE
 from .trainers.GANTrainer import GANTrainer
 from .trainers.PatchNCETrainer import PatchNCETrainer
 
-# TODO: write logger
-
-def train(X_dataloader, Y_dataloader, n_epochs=400, n_steps_D=1, lr=2e-3,
-          print_every=100):
+def train(X_dataloader, Y_dataloader, n_epochs=400, lr=2e-3, print_every=100):
     """
     Train all networks (Discriminator, Generator, PatchNCE).
 
@@ -26,11 +23,10 @@ def train(X_dataloader, Y_dataloader, n_epochs=400, n_steps_D=1, lr=2e-3,
     - [DataLoader] X_dataloader: iterable dataset to be sequentially sampled
     - [DataLoader] Y_dataloader: iterable dataset to be randomly sampled
     - [int] n_epochs: number of iterations for X_dataloader
-    - [int] n_steps_D: number of steps to train discriminator per minibatch
     - [float] lr: learning rate for Adam optimizer
     - [int] print_every: print every X iterations
 
-    Returns None, but outputs training loss along the way.
+    Returns all trained networks and their loss histories.
     """
 
     # init networks
@@ -46,17 +42,21 @@ def train(X_dataloader, Y_dataloader, n_epochs=400, n_steps_D=1, lr=2e-3,
     # init iterator to draw (random) samples from Y_dataloader
     Y_iter = iter(Y_dataloader)
 
+    # dictionary of loss histories for plotting and evaluation purposes
+    loss_histories = {"discriminator": [], "generator": [], "patchNCE": []}
+
     for epoch in range(n_epochs):
         print("Epoch {}/{}".format(epoch, n_epochs))
 
         for n_batch, real_X in enumerate(X_dataloader):
 
             # train discriminator
-            for _ in range(n_steps_D):
-                loss_D = GANTrainer.train_discriminator(G, D, solver_D, real_X)
+            loss_D = GANTrainer.train_discriminator(G, D, solver_D, real_X)
+            loss_histories["discriminator"].append(loss_D)
 
             # train generator
             loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape)
+            loss_histories["generator"].append(loss_G)
 
             # train PatchNCE
             loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X)
@@ -74,8 +74,11 @@ def train(X_dataloader, Y_dataloader, n_epochs=400, n_steps_D=1, lr=2e-3,
             noise = randn(real_Y.shape)
             fake_Y = G(noise)
             loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y)
+            loss_histories["patchNCE"].append(loss_P)
 
         if n_batch % print_every == 0:
             print("loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
                   .format(loss_D, loss_G, loss_P))
+
+    return D, G, P, loss_histories
 
