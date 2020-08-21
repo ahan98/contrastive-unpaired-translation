@@ -1,61 +1,51 @@
 import numpy as np
 import torch
 import torchvision.transforms as T
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, RandomSampler
 from torchvision.datasets import ImageFolder
 from collections import defaultdict
+import splitfolders
 
-def make_dataloaders(path, X_class_name, Y_class_name, X_train_split=0.8,
-                     image_size=256, minibatch_size=1):
+"""
+A collection of methods to manipulate image datasets.
+"""
+
+def split_folders(path, output_folder="output", train_val_ratio=(.8,.2)):
+    splitfolders.ratio(path, output=output_folder, ratio=train_val_ratio)
+
+
+def make_dataloader(batches_by_class, class_name, image_size=256,
+                    minibatch_size=1, replacement=False):
     """
-    Returns DataLoaders for training and validation sets of X, and a single
-    DataLoader for the entire batch of Y.
-
-    Note that Y is not split into training and validation sets. During each
-    training iteration, a random minibatch is drawn from the entire Y dataset.
-    And during validation, we only care about how well the Generator works on
-    inputs from X.
+    Returns a Dataloader from the batch of tensor images stored in
+    batches_by_class[class_name].
 
     Inputs:
-    - [String] path: path containing subdirectories of images
-    - [String] X_class_name: name of folder to use for X (e.g., "horses")
-    - [String] Y_class_name: name of folder to use for Y (e.g., "zebras")
-    - [float] X_train_split: the proportion of X used for training
+    - [dict] batches_by_class: dictionary of class names to batch
+    - [String] class_name: class name of desired batch
     - [int] image_size: dimension to scale images
     - [int] minibatch_size: number of samples to draw from X and Y
+    - [bool] replacement: if True, create DataLoader with a RandomSampler that
+      samples with replacement
     """
 
-    # get batches for X and Y
-    batches_by_class = DataUtils.make_batches_from_path(path, image_size)
-    X_batch = batches_by_class[X_class_name]
-    Y_batch = batches_by_class[Y_class_name]
-
-    # get the batch item indices for train/val sets
-    X_shuffled_idxs = torch.randperm(len(X_batch))
-    partition = int(np.ceil(X_train_split * dataset_size))
-    X_train_idxs = X_shuffled_idxs[:partition]
-    X_val_idxs = X_shuffled_idxs[partition:]
-
-    # create the train/val sets from their batch item indices
-    X_train = X_batch[X_train_idxs]
-    X_val = X_batch[X_val_idxs]
+    # get batch for path/class_name
+    batch = batches_by_class[class_name]
 
     # condense batches into (N+1)-dimensional tensors
-    X_train, X_val = torch.stack(X_train), torch.stack(X_val)
-    Y_batch = torch.stack(Y_batch)
+    batch = torch.stack(batch)
 
-    # initalize dataloaders
-    X_train = DataLoader(X_train, shuffle=True, batch_size=minibatch_size)
-    X_val = DataLoader(X_val, batch_size=minibatch_size)
+    # convert to dataloader
+    if replacement:
+        sampler = RandomSampler(Y_batch, replacement=True)
+        dataloader = DataLoader(batch, batch_size=minibatch_size, sampler=sampler)
+    else:
+        dataloader = DataLoader(batch, shuffle=True, batch_size=minibatch_size)
 
-    # define custom sampler for Y, since it is sampled with replacement
-    sampler = RandomSampler(Y_batch, replacement=True)
-    Y_batch = DataLoader(Y_batch, batch_size=minibatch_size, sampler=sampler)
-
-    return X_train, X_val, Y_batch
+    return dataloader
 
 
-def make_batches_from_path(path, image_size=256):
+def get_batches_from_path(path, image_size=256):
     """
     Returns a dictionary mapping each subdirectory to a batch of its images.
 
