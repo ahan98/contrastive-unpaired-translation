@@ -4,13 +4,23 @@ parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
 import torch
+from torch.utils.data import DataLoader
 from training.train import train
 
 def test():
-    in_N, in_C, in_H, in_W = 1, 3, 256, 256  # note we assume 256x256 images
-    encoder_fn = Encoder()
-    sample_in = torch.zeros((in_N, in_C, in_H, in_W))
-    out, samples = encoder_fn(sample_in)
+    batch_shape = (2, 3, 256, 256)
+    minibatch_size = 1
+
+    X_batch = torch.zeros(batch_shape)
+    X_dataloader = DataLoader(X_batch)
+
+    Y_batch = torch.zeros(batch_shape)
+    Y_dataloader = DataLoader(Y_batch, shuffle=True)
+
+    train(X_dataloader, Y_dataloader, n_epochs=1)
+
+    print("Train test passed")
+    return True
 
 if __name__ == "__main__":
     test()

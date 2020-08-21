@@ -27,7 +27,7 @@ class GANTrainer:
         # train on real and fake data
         prediction_real = discriminator(real_data)
         prediction_fake = discriminator(fake_data)
-        loss = __discriminator_loss(prediction_real, prediction_fake)
+        loss = GANTrainer.__discriminator_loss(prediction_real, prediction_fake)
 
         loss.backward()
         solver.step()
@@ -57,7 +57,7 @@ class GANTrainer:
 
         # train on fake data only
         prediction_fake = discriminator(fake_data)
-        loss = __generator_loss(prediction_fake)
+        loss = GANTrainer.__generator_loss(prediction_fake)
 
         loss.backward()
         solver.step()

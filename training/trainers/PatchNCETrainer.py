@@ -17,16 +17,19 @@ class PatchNCETrainer:
         Returns PatchNCE loss.
         """
 
-        solver.zero_grads()
+        solver.zero_grad()
 
-        # Extract features from the encoder sub-network.
-        _, real_features = patchNCE(real_data)
-        _, fake_features = patchNCE(fake_data)
+        # Extract features from layers of the encoder sub-network, and compute
+        # loss for each layer's features.
+        real_features_dict = patchNCE(real_data)
+        fake_features_dict = patchNCE(fake_data)
+        loss = 0
+        for layer_key in real_features_dict:
+            real_features = real_features_dict[layer_key]
+            fake_features = fake_features_dict[layer_key]
+            loss += PatchNCETrainer._patchNCE_loss(real_features, fake_features)
 
-        # Use encoder features to compute loss.
-        loss = _patchNCE_loss(real_features, fake_features)
         loss.backward()
-
         solver.step()
 
         return loss
@@ -106,7 +109,7 @@ class PatchNCETrainer:
         # stored in index 0 of each of the (N*S) vectors.
         predictions = logits.flatten(0, 1)  # (N,S,S+1) -> (N*S, S+1)
         targets = torch.zeros(N * S, dtype=torch.long)
-        loss = cross_entropy(predictions, targets, reduction="none")
+        loss = cross_entropy(predictions, targets)#, reduction="none")
 
         if verbose:
             print("Shape of predictions:", predictions.shape, "\nExpected",
