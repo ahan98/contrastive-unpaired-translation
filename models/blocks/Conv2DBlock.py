@@ -35,7 +35,5 @@ class Conv2DBlock(nn.Module):
         self.model = nn.Sequential(*model)
 
     def forward(self, x):
-        print("CONV INPUT device", x.device)
         out = self.model(x)
-        print("CONV output device", x.device)
         return out

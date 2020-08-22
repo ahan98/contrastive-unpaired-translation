@@ -18,5 +18,4 @@ class NormLayer(nn.Module):
             return x
 
         out = self.model(x)
-        print("NORM OUTPUT DEVICE", out.device)
         return out
