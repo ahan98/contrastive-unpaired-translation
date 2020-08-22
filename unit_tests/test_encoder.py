@@ -8,8 +8,10 @@ from models.GAN.Encoder import Encoder
 
 def test():
     in_N, in_C, in_H, in_W = 1, 3, 256, 256  # note we assume 256x256 images
-    encoder_fn = Encoder()
-    sample_in = torch.zeros((in_N, in_C, in_H, in_W))
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    encoder_fn = Encoder().to(device)
+    sample_in = torch.zeros((in_N, in_C, in_H, in_W), device=device)
+    print("Using device", device)
     out, samples = encoder_fn(sample_in)
 
     last_residual_filter_size = 256

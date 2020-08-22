@@ -9,8 +9,10 @@ from models.blocks.DownsamplingBlock import DownsamplingBlock
 def test():
     in_N, in_C, in_H, in_W = 2, 3, 256, 256  # note we assume even in_H and in_W
     out_C = 128
-    downsample_block_fn = DownsamplingBlock(in_C, out_C)
-    sample_in = torch.zeros((in_N, in_C, in_H, in_W))
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    downsample_block_fn = DownsamplingBlock(in_C, out_C).to(device)
+    sample_in = torch.zeros((in_N, in_C, in_H, in_W), device=device)
+    print("Using device", device)
     out = downsample_block_fn(sample_in)
     expected_shape = (in_N, out_C, 0.5 * in_H, 0.5 * in_W)
 

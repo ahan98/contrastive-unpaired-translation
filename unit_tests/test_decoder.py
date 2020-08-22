@@ -8,8 +8,10 @@ from models.GAN.Decoder import Decoder
 
 def test():
     in_N, in_C, in_H, in_W = 1, 256, 64, 64
-    decoder_fn = Decoder()
-    sample_in = torch.zeros((in_N, in_C, in_H, in_W))
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    decoder_fn = Decoder().to(device)
+    sample_in = torch.zeros((in_N, in_C, in_H, in_W), device=device)
+    print("Using devce", device)
     out = decoder_fn(sample_in)
 
     expected_shape = in_N, 3, in_H * 4, in_W * 4

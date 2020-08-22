@@ -8,8 +8,10 @@ from models.GAN.Generator import Generator
 
 def test():
     in_N, in_C, in_H, in_W = 1, 3, 256, 256
-    generator_fn = Generator()
-    sample_in = torch.zeros((in_N, in_C, in_H, in_W))
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    generator_fn = Generator().to(device)
+    sample_in = torch.zeros((in_N, in_C, in_H, in_W), device=device)
+    print("Using device", device)
     out = generator_fn(sample_in)
 
     expected_shape = sample_in.shape

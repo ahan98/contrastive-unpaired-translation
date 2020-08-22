@@ -8,8 +8,10 @@ from models.GAN.Discriminator import Discriminator
 
 def test():
     in_N, in_C, in_H, in_W = 1, 3, 256, 256
-    discriminator_fn = Discriminator()
-    sample_in = torch.zeros((in_N, in_C, in_H, in_W))
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    discriminator_fn = Discriminator().to(device)
+    sample_in = torch.zeros((in_N, in_C, in_H, in_W), device=device)
+    print("Using device", device)
     out = discriminator_fn(sample_in)
     print(out.shape)
 

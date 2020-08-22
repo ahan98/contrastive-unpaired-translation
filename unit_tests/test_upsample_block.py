@@ -9,8 +9,10 @@ from models.blocks.UpsamplingBlock import UpsamplingBlock
 def test():
     in_N, in_C, in_H, in_W = 2, 3, 256, 256
     out_C = 128
-    upsample_block_fn = UpsamplingBlock(in_C, out_C)
-    sample_in = torch.zeros((in_N, in_C, in_H, in_W))
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    upsample_block_fn = UpsamplingBlock(in_C, out_C).to(device)
+    sample_in = torch.zeros((in_N, in_C, in_H, in_W), device=device)
+    print("Using device", device)
     out = upsample_block_fn(sample_in)
     expected_shape = (in_N, out_C, 2 * in_H, 2 * in_W)
 

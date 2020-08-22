@@ -25,18 +25,17 @@ class Conv2DBlock(nn.Module):
                       padding_mode=padding_mode_str, bias=use_bias),
 
             # Norm layer
-            #NormLayer(norm_type, out_channels, batch_momentum)
+            NormLayer(norm_type, out_channels, batch_momentum)
         ]
 
         # Activation layer
-        #if activation_type != ActivationType.NONE:
-        #    model += [ActivationLayer(activation_type)]
+        if activation_type != ActivationType.NONE:
+            model += [ActivationLayer(activation_type)]
 
-        self.model = nn.Sequential(*model).to(device)
+        self.model = nn.Sequential(*model)
 
     def forward(self, x):
         print("CONV INPUT device", x.device)
-        x.cuda()
         out = self.model(x)
         print("CONV output device", x.device)
         return out
