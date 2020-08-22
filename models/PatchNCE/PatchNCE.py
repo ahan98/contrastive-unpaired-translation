@@ -16,5 +16,11 @@ class PatchNCE(nn.Module):
 
     def forward(self, x):
         _, samples = self.encoder(x)
-        features_final = {layer_key: self.MLP(samples[layer_key]) for layer_key in samples}
+        features_final = {}
+        for layer_key in samples:
+            features = self.MLP(samples[layer_key])
+            norm = features.norm(p=2, dim=1, keepdim=True)  # L2 norm
+            features_norm = features.div(norm)
+            features_final[layer_key] = features_norm
+
         return features_final

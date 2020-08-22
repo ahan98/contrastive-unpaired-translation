@@ -35,7 +35,7 @@ class PatchNCETrainer:
         return loss
 
     @staticmethod
-    def _patchNCE_loss(feat_x, feat_gx, tau=0.07, verbose=False):
+    def _patchNCE_loss(feat_x, feat_gx, tau=0.07, reduction="mean", verbose=False):
         """
         Computes the patchwise contrastive loss between sampled feature maps
         from H(G_enc(x)) and sampled feature maps from H(G_enc(G(x))).
@@ -59,6 +59,7 @@ class PatchNCETrainer:
         - feat_x [(N, C, S) tensor]: sampled feature maps from H(G_enc(x))
         - feat_gx [(N, C, S) tensor]: sampled feature maps from H(G_enc(G(x)))
         - tau [float]: temperature parameter to scale logits
+        - reduction [string]: mode to reduce cross entropy loss
         - verbose [bool]: if True, prints expected shape of predictions and loss
 
         Returns:
@@ -98,7 +99,7 @@ class PatchNCETrainer:
         # meaningless. Note that these diagonals are are not literally zeroed
         # out, but rather become a near-zero, positive value after
         # exponentiation from softmax cross entropy.
-        mask = torch.eye(S)[None, :, :]  # (1,S,S)
+        mask = torch.eye(S, dtype=torch.bool)[None, :, :]  # (1,S,S)
         pwc_negs.masked_fill_(mask, float("-inf"))
 
         # torch.cat appends each length-S column vector in pwc_pos to the
@@ -109,7 +110,8 @@ class PatchNCETrainer:
         # stored in index 0 of each of the (N*S) vectors.
         predictions = logits.flatten(0, 1)  # (N,S,S+1) -> (N*S, S+1)
         targets = torch.zeros(N * S, dtype=torch.long)
-        loss = cross_entropy(predictions, targets)#, reduction="none")
+
+        loss = cross_entropy(predictions, targets, reduction=reduction)
 
         if verbose:
             print("Shape of predictions:", predictions.shape, "\nExpected",
