@@ -9,9 +9,11 @@ from models.GAN.Encoder import Encoder
 
 def test():
     in_N, in_C, in_H, in_W = 1, 3, 256, 256  # note we assume 256x256 images
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     encoder = Encoder()
-    patch_nce_fn = PatchNCE(encoder)
-    sample_in = torch.zeros((in_N, in_C, in_H, in_W))
+    patch_nce_fn = PatchNCE(encoder).to(device)
+    sample_in = torch.zeros((in_N, in_C, in_H, in_W), device=device)
+    print("Using device", device)
     features_final = patch_nce_fn(sample_in)
 
     n_layers_sampled = 5
