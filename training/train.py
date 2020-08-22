@@ -3,7 +3,7 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
-from torch import optim, randn
+import torch
 from torch.utils.data import DataLoader
 from models.GAN.Discriminator import Discriminator
 from models.GAN.Generator import Generator
@@ -11,7 +11,8 @@ from models.PatchNCE.PatchNCE import PatchNCE
 from .trainers.GANTrainer import GANTrainer
 from .trainers.PatchNCETrainer import PatchNCETrainer
 
-def train(X_dataloader, Y_dataloader, n_epochs=400, lr=2e-3, print_every=100):
+def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400, lr=2e-3,
+          print_every=100):
     """
     Train all networks (Discriminator, Generator, PatchNCE).
 
@@ -25,19 +26,20 @@ def train(X_dataloader, Y_dataloader, n_epochs=400, lr=2e-3, print_every=100):
     - [int] n_epochs: number of iterations for X_dataloader
     - [float] lr: learning rate for Adam optimizer
     - [int] print_every: print every X iterations
+    - [String] device: name of device to load data (e.g., "cuda:0")
 
     Returns all trained networks and their loss histories.
     """
 
     # init networks
-    D = Discriminator()
-    G = Generator()
-    P = PatchNCE(G.encoder)
+    D = Discriminator().to(device)
+    G = Generator().to(device)
+    P = PatchNCE(G.encoder).to(device)
 
     # init solvers
-    solver_D = optim.Adam(D.parameters(), lr=lr)
-    solver_G = optim.Adam(G.parameters(), lr=lr)
-    solver_P = optim.Adam(P.parameters(), lr=lr)
+    solver_D = torch.optim.Adam(D.parameters(), lr=lr)
+    solver_G = torch.optim.Adam(G.parameters(), lr=lr)
+    solver_P = torch.optim.Adam(P.parameters(), lr=lr)
 
     # init iterator to draw (random) samples from Y_dataloader
     Y_iter = iter(Y_dataloader)
@@ -49,31 +51,34 @@ def train(X_dataloader, Y_dataloader, n_epochs=400, lr=2e-3, print_every=100):
         print("Epoch {}/{}".format(epoch, n_epochs))
 
         for n_batch, real_X in enumerate(X_dataloader):
+            real_X = real_X.to(device)
 
             # train discriminator
-            loss_D = GANTrainer.train_discriminator(G, D, solver_D, real_X)
+            loss_D = GANTrainer.train_discriminator(G, D, solver_D, real_X, device)
             loss_histories["discriminator"].append(loss_D)
 
             # train generator
-            loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape)
+            loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape, device)
             loss_histories["generator"].append(loss_G)
 
             # train PatchNCE
-            loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X)
+            loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X, device)
 
             # get random sample from Y, treating it as the "real" data
             try:
-                real_Y = next(Y_iter)
+                real_Y = next(Y_iter).to(device)
             except StopIteration:
                 # reshuffle Dataloader if all samples have been used once
                 Y_iter = iter(Y_dataloader)
-                real_Y = next(Y_iter)
+                real_Y = next(Y_iter).to(device)
+
+            real_Y = real_Y.to(device)
 
             # train PatchNCE again, this time comparing real and fake images
             # from Y dataset
-            noise = randn(real_Y.shape)
+            noise = torch.randn(real_Y.shape, device=device)
             fake_Y = G(noise)
-            loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y)
+            loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y, device)
             loss_histories["patchNCE"].append(loss_P)
 
         if n_batch % print_every == 0:

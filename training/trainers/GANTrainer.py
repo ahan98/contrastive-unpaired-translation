@@ -3,17 +3,16 @@ import torch
 class GANTrainer:
 
     @staticmethod
-    def train_discriminator(generator, discriminator, solver, real_data):
+    def train_discriminator(generator, discriminator, solver, real_data,
+                            device="cpu"):
         """
-        Trains discriminator on real and fake data, and computes its loss.
+        Trains discriminator on real and fake data, and returns its loss.
 
         Inputs:
         - [nn.Module] generator - generator network
         - [nn.Module] discriminator - discriminator network
         - [torch.optim] solver - SGD optimizer
         - [torch.Tensor] real_data - tensor of sample from real dataset
-
-        Returns discriminator loss.
         """
 
         solver.zero_grad()  # reset gradients
@@ -21,7 +20,7 @@ class GANTrainer:
         # generate fake data
         # NOTE: we detach generator since it is fixed during discriminator
         # training
-        noise = torch.randn(real_data.shape)
+        noise = torch.randn(real_data.shape, device=device)
         fake_data = generator(noise).detach()
 
         # train on real and fake data
@@ -35,7 +34,8 @@ class GANTrainer:
         return loss
 
     @staticmethod
-    def train_generator(generator, discriminator, solver, real_data_shape):
+    def train_generator(generator, discriminator, solver, real_data_shape,
+                        device="cpu"):
         """
         Trains generator on fake data, and computes its loss.
 
@@ -52,7 +52,7 @@ class GANTrainer:
         solver.zero_grad()  # reset gradients
 
         # generate fake data
-        noise = torch.randn(real_data_shape)
+        noise = torch.randn(real_data_shape, device=device)
         fake_data = generator(noise)  # here, we DO want loss to backprop
 
         # train on fake data only

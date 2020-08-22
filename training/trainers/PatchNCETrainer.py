@@ -4,7 +4,7 @@ from torch.nn.functional import cross_entropy
 
 class PatchNCETrainer:
     @staticmethod
-    def train_patchnce(patchNCE, solver, real_data, fake_data):
+    def train_patchnce(patchNCE, solver, real_data, fake_data, device="cpu"):
         """
         Trains PatchNCE network on real and fake data, and computes its loss.
 
@@ -13,8 +13,10 @@ class PatchNCETrainer:
         - [torch.optim] solver: SGD optimizer
         - [torch.Tensor] real_data: tensor of sample from real dataset
         - [torch.Tensor] fake_data: tensor of sample generated from noise
+        - [String] device: name of device to load data (e.g., "cuda:0")
 
-        Returns PatchNCE loss.
+        Returns:
+        - [float] PatchNCE loss
         """
 
         solver.zero_grad()
@@ -27,7 +29,8 @@ class PatchNCETrainer:
         for layer_key in real_features_dict:
             real_features = real_features_dict[layer_key]
             fake_features = fake_features_dict[layer_key]
-            loss += PatchNCETrainer._patchNCE_loss(real_features, fake_features)
+            loss += PatchNCETrainer._patchNCE_loss(real_features, fake_features,
+                                                   device)
 
         loss.backward()
         solver.step()
@@ -35,7 +38,8 @@ class PatchNCETrainer:
         return loss
 
     @staticmethod
-    def _patchNCE_loss(feat_x, feat_gx, tau=0.07, reduction="mean", verbose=False):
+    def _patchNCE_loss(feat_x, feat_gx, device="cpu", tau=0.07,
+                       reduction="mean", verbose=False):
         """
         Computes the patchwise contrastive loss between sampled feature maps
         from H(G_enc(x)) and sampled feature maps from H(G_enc(G(x))).
@@ -56,14 +60,15 @@ class PatchNCETrainer:
         further change is discouraged.
 
         Inputs:
-        - feat_x [(N, C, S) tensor]: sampled feature maps from H(G_enc(x))
-        - feat_gx [(N, C, S) tensor]: sampled feature maps from H(G_enc(G(x)))
-        - tau [float]: temperature parameter to scale logits
-        - reduction [string]: mode to reduce cross entropy loss
-        - verbose [bool]: if True, prints expected shape of predictions and loss
+        - [torch.Tensor] feat_x: sampled feature maps from H(G_enc(x))
+        - [torch.Tensor] feat_gx: sampled feature maps from H(G_enc(G(x)))
+        - [float] tau: temperature parameter to scale logits
+        - [string] reduction: mode to reduce cross entropy loss
+        - [bool] verbose: if True, prints expected shape of predictions and loss
+        - [String] device: name of device to load data (e.g., "cuda:0")
 
         Returns:
-        [float] The PatchNCE loss
+        - [float] PatchNCE loss
         """
 
         # N - batch size (default 1)
@@ -99,7 +104,7 @@ class PatchNCETrainer:
         # meaningless. Note that these diagonals are are not literally zeroed
         # out, but rather become a near-zero, positive value after
         # exponentiation from softmax cross entropy.
-        mask = torch.eye(S, dtype=torch.bool)[None, :, :]  # (1,S,S)
+        mask = torch.eye(S, dtype=torch.bool, device=device)[None, :, :]  # (1,S,S)
         pwc_negs.masked_fill_(mask, float("-inf"))
 
         # torch.cat appends each length-S column vector in pwc_pos to the
@@ -109,7 +114,7 @@ class PatchNCETrainer:
         # Compute the cross entropy loss, where the positive patch similarity is
         # stored in index 0 of each of the (N*S) vectors.
         predictions = logits.flatten(0, 1)  # (N,S,S+1) -> (N*S, S+1)
-        targets = torch.zeros(N * S, dtype=torch.long)
+        targets = torch.zeros(N * S, dtype=torch.long, device=device)
 
         loss = cross_entropy(predictions, targets, reduction=reduction)
 
