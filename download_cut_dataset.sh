@@ -22,4 +22,3 @@ ZIP_FILE=$FILE.zip
 wget --no-check-certificate $URL
 unzip $ZIP_FILE
 rm $ZIP_FILE
-cd ..

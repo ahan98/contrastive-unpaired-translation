@@ -35,7 +35,7 @@ def test():
                 .format(expected_shape, feature_tensor.shape)
             )
 
-    print("Encoder test passed")
+    print("PatchNCE test passed")
     return True
 
 if __name__ == "__main__":
