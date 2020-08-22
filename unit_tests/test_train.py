@@ -11,6 +11,7 @@ def test():
     batch_shape = (2, 3, 256, 256)
     minibatch_size = 1
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print("Using device:", device)
 
     X_batch = torch.zeros(batch_shape)
     X_dataloader = DataLoader(X_batch)

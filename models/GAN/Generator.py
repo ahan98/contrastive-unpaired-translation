@@ -23,6 +23,8 @@ class Generator(nn.Module):
         self.decoder = decoder
 
     def forward(self, x):
+        print("GEN FORWARD")
         out, _ = self.encoder(x)
+        print("AFTER ENCODER")
         out = self.decoder(out)
         return out

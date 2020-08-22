@@ -14,18 +14,20 @@ class GANTrainer:
         - [torch.optim] solver - SGD optimizer
         - [torch.Tensor] real_data - tensor of sample from real dataset
         """
-
         solver.zero_grad()  # reset gradients
 
         # generate fake data
         # NOTE: we detach generator since it is fixed during discriminator
         # training
         noise = torch.randn(real_data.shape, device=device)
+        print("HELLO")
         fake_data = generator(noise).detach()
+        print("fake data device", fake_data.device)
 
         # train on real and fake data
         prediction_real = discriminator(real_data)
         prediction_fake = discriminator(fake_data)
+        print("prediction real/fake devices", prediction_real.device, prediction_fake.device)
         loss = GANTrainer.__discriminator_loss(prediction_real, prediction_fake)
 
         loss.backward()

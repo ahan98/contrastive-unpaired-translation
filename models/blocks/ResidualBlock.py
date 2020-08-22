@@ -19,7 +19,11 @@ class ResidualBlock(nn.Module):
         self.model = nn.Sequential(*model)
 
     def forward(self, x):
+        print("DEVICE FOR RESIDUAL BLOCK INPUT", x.device)
         residual = x
+        print("DEVICE FOR RESIDUAL INPUT COPY", residual.device)
         out = self.model(x)
+        print("RESIDUAL OUTPUT DEVICE BEFORE ADD RESIDUAL", out.device)
         out += residual
+        print("RESIDUAL OUTPUT DEVICE", out.device)
         return out

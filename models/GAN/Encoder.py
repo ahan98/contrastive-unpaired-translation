@@ -45,6 +45,7 @@ class Encoder(nn.Module):
         second downsampling convolution, and the ﬁrst and the ﬁfth residual
         block. [...] For each layer’s features, we sample 256 random locations.
         """
+        print("ENCODER FORWARD")
 
         samples = {}
 
@@ -64,6 +65,7 @@ class Encoder(nn.Module):
 
         for block_idx, res_block in enumerate(self.res_blocks):
             out = res_block(out)
+            print("OUT DEVICE BEFORE RES BLOCK", block_idx, out.device)
             if block_idx == 0:
                 samples["res_block0"] = Encoder.__make_samples_for_tensor(out, self.sample_size)
             elif block_idx == 4:
@@ -89,4 +91,5 @@ class Encoder(nn.Module):
         # Extract all S sampled spatial locations across all channels and batch
         # items.
         samples = tensor_reshape[:, :, spatial_idxs]
+        print("SAMPLES DEVICE", samples.device)
         return samples

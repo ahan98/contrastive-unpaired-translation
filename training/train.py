@@ -54,32 +54,33 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400, lr=2e-3,
             real_X = real_X.to(device)
 
             # train discriminator
+            print(next(G.parameters()).is_cuda, next(D.parameters()).is_cuda, real_X.device)
             loss_D = GANTrainer.train_discriminator(G, D, solver_D, real_X, device)
-            loss_histories["discriminator"].append(loss_D)
-
-            # train generator
-            loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape, device)
-            loss_histories["generator"].append(loss_G)
-
-            # train PatchNCE
-            loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X, device)
-
-            # get random sample from Y, treating it as the "real" data
-            try:
-                real_Y = next(Y_iter).to(device)
-            except StopIteration:
-                # reshuffle Dataloader if all samples have been used once
-                Y_iter = iter(Y_dataloader)
-                real_Y = next(Y_iter).to(device)
-
-            real_Y = real_Y.to(device)
-
-            # train PatchNCE again, this time comparing real and fake images
-            # from Y dataset
-            noise = torch.randn(real_Y.shape, device=device)
-            fake_Y = G(noise)
-            loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y, device)
-            loss_histories["patchNCE"].append(loss_P)
+            #loss_histories["discriminator"].append(loss_D)
+#
+            ## train generator
+            #loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape, device)
+            #loss_histories["generator"].append(loss_G)
+#
+            ## train PatchNCE
+            #loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X, device)
+#
+            ## get random sample from Y, treating it as the "real" data
+            #try:
+            #    real_Y = next(Y_iter).to(device)
+            #except StopIteration:
+            #    # reshuffle Dataloader if all samples have been used once
+            #    Y_iter = iter(Y_dataloader)
+            #    real_Y = next(Y_iter).to(device)
+#
+            #real_Y = real_Y.to(device)
+#
+            ## train PatchNCE again, this time comparing real and fake images
+            ## from Y dataset
+            #noise = torch.randn(real_Y.shape, device=device)
+            #fake_Y = G(noise)
+            #loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y, device)
+            #loss_histories["patchNCE"].append(loss_P)
 
         if n_batch % print_every == 0:
             print("loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
