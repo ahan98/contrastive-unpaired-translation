@@ -12,8 +12,8 @@ from .trainers.GANTrainer import GANTrainer
 from .trainers.PatchNCETrainer import PatchNCETrainer
 from tqdm import tqdm
 
-def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400, lr=2e-3,
-          betas=(0.9, 0.999), print_every=100):
+def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
+          learning_rates=(2e-3, 2e-3, 2e-3), betas=(0.9, 0.999), print_every=100):
     """
     Train all networks (Discriminator, Generator, PatchNCE).
 
@@ -38,9 +38,10 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400, lr=2e-3,
     P = PatchNCE(G.encoder).to(device)
 
     # init solvers
-    solver_D = torch.optim.Adam(D.parameters(), lr=lr, betas=betas)
-    solver_G = torch.optim.Adam(G.parameters(), lr=lr, betas=betas)
-    solver_P = torch.optim.Adam(P.parameters(), lr=lr, betas=betas)
+    lr_D, lr_G, lr_P = lr
+    solver_D = torch.optim.Adam(D.parameters(), lr=lr_D, betas=betas)
+    solver_G = torch.optim.Adam(G.parameters(), lr=lr_G, betas=betas)
+    solver_P = torch.optim.Adam(P.parameters(), lr=lr_P, betas=betas)
 
     # init iterator to draw (random) samples from Y_dataloader
     Y_iter = iter(Y_dataloader)
