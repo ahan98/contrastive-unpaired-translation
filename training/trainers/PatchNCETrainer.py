@@ -119,9 +119,9 @@ class PatchNCETrainer:
         loss = cross_entropy(predictions, targets, reduction=reduction)
 
         if verbose:
-            print("Shape of predictions:", predictions.shape, "\nExpected",
-                  torch.Size([N*S, S+1]))
-            print("Shape of cross entropy loss:", loss.shape, "\nExpected",
-                  torch.Size([N*S]))
+            print("Shape of predictions: {}\nExpected: {}"
+                  .format(predictions.shape, torch.Size([N*S, S+1])))
+            print("Shape of cross entropy loss: {}\nExpected: {}"
+                  .format(loss.shape, torch.Size([N*S])))
 
         return loss
