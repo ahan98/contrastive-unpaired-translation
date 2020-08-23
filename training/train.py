@@ -46,7 +46,7 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
     Y_iter = iter(Y_dataloader)
 
     # store average loss per epoch
-    avg_loss_per_epoch = {"discriminator": [], "generator": [], "patchNCE": []}
+    loss_per_minibatch = {"discriminator": [], "generator": [], "patchNCE": []}
 
     # variables to print progress
     batch_size = len(X_dataloader)
@@ -54,17 +54,14 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
     for epoch in range(n_epochs):
         print("Epoch {}/{}".format(epoch, n_epochs))
 
-        epoch_loss_D = epoch_loss_G = epoch_loss_P = 0
         for n_batch, real_X in enumerate(X_dataloader):
             real_X = real_X.to(device)
 
             # train discriminator
             loss_D = GANTrainer.train_discriminator(G, D, solver_D, real_X, device)
-            epoch_loss_D += loss_D
 
             # train generator
             loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape, device)
-            epoch_loss_G += loss_G
 
             # train PatchNCE
             loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X, device)
@@ -84,15 +81,14 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
             noise = torch.randn(real_Y.shape, device=device)
             fake_Y = G(noise)
             loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y, device)
-            epoch_loss_P += loss_P
+
+            loss_per_minibatch["discriminator"].append(loss_D)
+            loss_per_minibatch["generator"].append(loss_G)
+            loss_per_minibatch["patchNCE"].append(loss_P)
 
             if n_iter % print_every == 0:
                 print("iteration: {}/{}, loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
                       .format(n_batch, batch_size, loss_D, loss_G, loss_P))
 
-        avg_loss_per_epoch["discriminator"].append(epoch_loss_D / batch_size)
-        avg_loss_per_epoch["generator"].append(epoch_loss_G / batch_size)
-        avg_loss_per_epoch["patchNCE"].append(epoch_loss_P / batch_size)
-
-    return D, G, P, avg_loss_per_epoch
+    return D, G, P, loss_per_minibatch
 
