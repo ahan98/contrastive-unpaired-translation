@@ -10,7 +10,6 @@ from models.GAN.Generator import Generator
 from models.PatchNCE.PatchNCE import PatchNCE
 from .trainers.GANTrainer import GANTrainer
 from .trainers.PatchNCETrainer import PatchNCETrainer
-from tqdm import tqdm
 
 def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
           learning_rates=(2e-3, 2e-3, 2e-3), betas=(0.9, 0.999), print_every=100):
@@ -46,24 +45,28 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
     # init iterator to draw (random) samples from Y_dataloader
     Y_iter = iter(Y_dataloader)
 
-    # dictionary of losses per minibatch
-    loss_histories = {"discriminator": [], "generator": [], "patchNCE": []}
+    # store average loss per epoch
+    loss_per_epoch = {"discriminator": [], "generator": [], "patchNCE": []}
 
     # variables to print progress
     n_iter = 0
     batch_size = len(X_dataloader)
 
-    for epoch in tqdm(range(n_epochs)):
+    for epoch in range(n_epochs):
         print("Epoch {}/{}".format(epoch, n_epochs))
 
+        epoch_loss_D = epoch_loss_G = epoch_loss_P = 0
         for n_batch, real_X in enumerate(X_dataloader):
             real_X = real_X.to(device)
 
             # train discriminator
             loss_D = GANTrainer.train_discriminator(G, D, solver_D, real_X, device)
+            epoch_loss_D += loss_D
 
             # train generator
             loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape, device)
+            epoch_loss_G += loss_G
+
 
             # train PatchNCE
             loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X, device)
@@ -83,16 +86,17 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
             noise = torch.randn(real_Y.shape, device=device)
             fake_Y = G(noise)
             loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y, device)
-
-            # store loss for this minibatch
-            loss_histories["discriminator"].append(loss_D)
-            loss_histories["generator"].append(loss_G)
-            loss_histories["patchNCE"].append(loss_P)
+            epoch_loss_P += loss_P
 
             n_iter += 1
             if n_iter % print_every == 0:
                 print("iteration: {}/{}, loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
                       .format(n_iter, batch_size, loss_D, loss_G, loss_P))
+
+        # store loss for this minibatch
+        loss_histories["discriminator"].append(epoch_loss_D / batch_size)
+        loss_histories["generator"].append(epoch_loss_G / batch_size)
+        loss_histories["patchNCE"].append(epoch_loss_P / batch_size)
 
     return D, G, P, loss_histories
 

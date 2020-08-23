@@ -1,7 +1,6 @@
 split-folders
 matplotlib
 pytorch-fid
-tqdm
 
 --find-links https://download.pytorch.org/whl/torch_stable.html
 torch >= 1.4.0+cpu
