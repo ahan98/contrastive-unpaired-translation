@@ -86,7 +86,7 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
             loss_per_minibatch["generator"].append(loss_G)
             loss_per_minibatch["patchNCE"].append(loss_P)
 
-            if n_iter % print_every == 0:
+            if n_batch % print_every == 0:
                 print("iteration: {}/{}, loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
                       .format(n_batch, batch_size, loss_D, loss_G, loss_P))
 
