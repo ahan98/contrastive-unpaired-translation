@@ -46,7 +46,7 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
     Y_iter = iter(Y_dataloader)
 
     # store average loss per epoch
-    loss_per_epoch = {"discriminator": [], "generator": [], "patchNCE": []}
+    avg_loss_per_epoch = {"discriminator": [], "generator": [], "patchNCE": []}
 
     # variables to print progress
     n_iter = 0
@@ -66,7 +66,6 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
             # train generator
             loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape, device)
             epoch_loss_G += loss_G
-
 
             # train PatchNCE
             loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X, device)
@@ -93,10 +92,9 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
                 print("iteration: {}/{}, loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
                       .format(n_iter, batch_size, loss_D, loss_G, loss_P))
 
-        # store loss for this minibatch
-        loss_histories["discriminator"].append(epoch_loss_D / batch_size)
-        loss_histories["generator"].append(epoch_loss_G / batch_size)
-        loss_histories["patchNCE"].append(epoch_loss_P / batch_size)
+        avg_loss_per_epoch["discriminator"].append(epoch_loss_D / batch_size)
+        avg_loss_per_epoch["generator"].append(epoch_loss_G / batch_size)
+        avg_loss_per_epoch["patchNCE"].append(epoch_loss_P / batch_size)
 
     return D, G, P, loss_histories
 
