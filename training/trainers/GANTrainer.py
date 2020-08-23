@@ -20,14 +20,11 @@ class GANTrainer:
         # NOTE: we detach generator since it is fixed during discriminator
         # training
         noise = torch.randn(real_data.shape, device=device)
-        print("HELLO")
         fake_data = generator(noise).detach()
-        print("fake data device", fake_data.device)
 
         # train on real and fake data
         prediction_real = discriminator(real_data)
         prediction_fake = discriminator(fake_data)
-        print("prediction real/fake devices", prediction_real.device, prediction_fake.device)
         loss = GANTrainer.__discriminator_loss(prediction_real, prediction_fake)
 
         loss.backward()
