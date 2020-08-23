@@ -38,7 +38,7 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
     P = PatchNCE(G.encoder).to(device)
 
     # init solvers
-    lr_D, lr_G, lr_P = lr
+    lr_D, lr_G, lr_P = learning_rates
     solver_D = torch.optim.Adam(D.parameters(), lr=lr_D, betas=betas)
     solver_G = torch.optim.Adam(G.parameters(), lr=lr_G, betas=betas)
     solver_P = torch.optim.Adam(P.parameters(), lr=lr_P, betas=betas)
