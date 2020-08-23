@@ -2,6 +2,8 @@ import torch
 
 class GANTrainer:
 
+    criterion = torch.nn.MSELoss()
+
     @staticmethod
     def train_discriminator(generator, discriminator, solver, real_data,
                             device="cpu"):
@@ -11,26 +13,33 @@ class GANTrainer:
         Inputs:
         - [nn.Module] generator - generator network
         - [nn.Module] discriminator - discriminator network
-        - [torch.optim] solver - SGD optimizer
+        - [torch.optim] solver - gradient optimizer
         - [torch.Tensor] real_data - tensor of sample from real dataset
         """
         solver.zero_grad()  # reset gradients
+        criterion = torch.nn.MSELoss()
 
-        # generate fake data
-        # NOTE: we detach generator since it is fixed during discriminator
-        # training
+        # Train on real Data
+        prediction_real = discriminator(real_data)
+        target_real = torch.ones(prediction_real.shape, device=device)
+        # Calculate error and backpropagate
+        loss_real = GANTrainer.criterion(prediction_real, target_real)
+        loss_real.backward()
+
+        # Generate fake data
         noise = torch.randn(real_data.shape, device=device)
         fake_data = generator(noise).detach()
 
-        # train on real and fake data
-        prediction_real = discriminator(real_data)
+        # Train on fake data
         prediction_fake = discriminator(fake_data)
-        loss = GANTrainer.__discriminator_loss(prediction_real, prediction_fake)
+        target_fake = torch.zeros(prediction_fake.shape, device=device)
+        # Calculate error and backpropagate
+        loss_fake = GANTrainer.criterion(prediction_fake, target_fake)
+        loss_fake.backward()
 
-        loss.backward()
-        solver.step()
+        solver.step()  # update parameters
 
-        return loss
+        return loss_real + loss_fake
 
     @staticmethod
     def train_generator(generator, discriminator, solver, real_data_shape,
@@ -41,7 +50,7 @@ class GANTrainer:
         Inputs:
         - [nn.Module] generator - generator network
         - [nn.Module] discriminator - discriminator network
-        - [torch.optim] solver - SGD optimizer
+        - [torch.optim] solver - gradient optimizer
         - [torch.Size] real_data_shape - shape of sample from real dataset
 
         Returns generator loss, and the image generated from noise (to be passed
@@ -50,43 +59,17 @@ class GANTrainer:
 
         solver.zero_grad()  # reset gradients
 
-        # generate fake data
+        # Generate fake data
         noise = torch.randn(real_data_shape, device=device)
         fake_data = generator(noise)  # here, we DO want loss to backprop
 
-        # train on fake data only
+        # Train on fake data (only)
         prediction_fake = discriminator(fake_data)
-        loss = GANTrainer.__generator_loss(prediction_fake)
+        target_fake = torch.zeros(prediction_fake.shape, device=device)
+        # Calculate error and backpropagate
+        loss_fake = GANTrainer.criterion(prediction_fake, target_fake)
+        loss_fake.backward()
 
-        loss.backward()
         solver.step()
 
-        return loss, fake_data
-
-    ''' Private Static Methods '''
-
-    @staticmethod
-    def __discriminator_loss(predictions_real, predictions_fake):
-        """
-        Inputs:
-        - [torch.Tensor] predictions_real: output of discriminator given sample
-          from real dataset
-        - [torch.Tensor] predictions_fake: output of discriminator given
-          generated sample from noise
-
-        Returns least squares loss. See section 3.2 of Mao et al.
-        """
-        loss = torch.mean((predictions_real - 1)**2) + torch.mean(predictions_fake**2)
-        return 0.5 * loss
-
-    @staticmethod
-    def __generator_loss(predictions_fake):
-        """
-        Inputs:
-        - [torch.Tensor] predictions_fake: output of discriminator given
-          generated sample from noise
-
-        Returns least squares loss.
-        """
-        loss = torch.mean((predictions_fake - 1)**2)
-        return 0.5 * loss
+        return loss_fake, fake_data

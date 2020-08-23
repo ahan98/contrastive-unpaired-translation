@@ -96,5 +96,5 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
         avg_loss_per_epoch["generator"].append(epoch_loss_G / batch_size)
         avg_loss_per_epoch["patchNCE"].append(epoch_loss_P / batch_size)
 
-    return D, G, P, loss_histories
+    return D, G, P, avg_loss_per_epoch
 
