@@ -10,6 +10,7 @@ from models.GAN.Generator import Generator
 from models.PatchNCE.PatchNCE import PatchNCE
 from .trainers.GANTrainer import GANTrainer
 from .trainers.PatchNCETrainer import PatchNCETrainer
+from tqdm import tqdm
 
 def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400, lr=2e-3,
           print_every=100):
@@ -44,43 +45,49 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400, lr=2e-3,
     # init iterator to draw (random) samples from Y_dataloader
     Y_iter = iter(Y_dataloader)
 
-    # dictionary of loss histories for plotting and evaluation purposes
+    # dictionary of average minibatch loss per epoch
     loss_histories = {"discriminator": [], "generator": [], "patchNCE": []}
+    batch_size = len(X_dataloader)
 
-    for epoch in range(n_epochs):
+    for epoch in tqdm(range(n_epochs)):
         print("Epoch {}/{}".format(epoch, n_epochs))
 
-        for n_batch, real_X in enumerate(X_dataloader):
+        batch_loss_D = batch_loss_G = batch_loss_P = 0
+
+        for n_batch, real_X in tqdm(enumerate(X_dataloader)):
             real_X = real_X.to(device)
 
             # train discriminator
-            print(next(G.parameters()).is_cuda, next(D.parameters()).is_cuda, real_X.device)
             loss_D = GANTrainer.train_discriminator(G, D, solver_D, real_X, device)
-            #loss_histories["discriminator"].append(loss_D)
-#
-            ## train generator
-            #loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape, device)
-            #loss_histories["generator"].append(loss_G)
-#
-            ## train PatchNCE
-            #loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X, device)
-#
-            ## get random sample from Y, treating it as the "real" data
-            #try:
-            #    real_Y = next(Y_iter).to(device)
-            #except StopIteration:
-            #    # reshuffle Dataloader if all samples have been used once
-            #    Y_iter = iter(Y_dataloader)
-            #    real_Y = next(Y_iter).to(device)
-#
-            #real_Y = real_Y.to(device)
-#
-            ## train PatchNCE again, this time comparing real and fake images
-            ## from Y dataset
-            #noise = torch.randn(real_Y.shape, device=device)
-            #fake_Y = G(noise)
-            #loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y, device)
-            #loss_histories["patchNCE"].append(loss_P)
+            batch_loss_D += loss_D
+
+            # train generator
+            loss_G, fake_X = GANTrainer.train_generator(G, D, solver_G, real_X.shape, device)
+            batch_loss_G += loss_G
+
+            # train PatchNCE
+            loss_P = PatchNCETrainer.train_patchnce(P, solver_P, real_X, fake_X, device)
+
+            # get random sample from Y, treating it as the "real" data
+            try:
+                real_Y = next(Y_iter).to(device)
+            except StopIteration:
+                # reshuffle Dataloader if all samples have been used once
+                Y_iter = iter(Y_dataloader)
+                real_Y = next(Y_iter).to(device)
+
+            real_Y = real_Y.to(device)
+
+            # train PatchNCE again, this time comparing real and fake images
+            # from Y dataset
+            noise = torch.randn(real_Y.shape, device=device)
+            fake_Y = G(noise)
+            loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y, device)
+            batch_loss_P += loss_P
+
+        loss_histories["discriminator"] = batch_loss_D / batch_size
+        loss_histories["generator"] = batch_loss_G / batch_size
+        loss_histories["patchNCE"] = batch_loss_P / batch_size
 
         if n_batch % print_every == 0:
             print("loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
