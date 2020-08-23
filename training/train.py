@@ -13,7 +13,7 @@ from .trainers.PatchNCETrainer import PatchNCETrainer
 from tqdm import tqdm
 
 def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400, lr=2e-3,
-          betas=betas, print_every=100):
+          betas=(0.9, 0.999), print_every=100):
     """
     Train all networks (Discriminator, Generator, PatchNCE).
 
