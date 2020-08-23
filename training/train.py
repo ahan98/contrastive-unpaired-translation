@@ -49,7 +49,6 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
     avg_loss_per_epoch = {"discriminator": [], "generator": [], "patchNCE": []}
 
     # variables to print progress
-    n_iter = 0
     batch_size = len(X_dataloader)
 
     for epoch in range(n_epochs):
@@ -87,10 +86,9 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400,
             loss_P += PatchNCETrainer.train_patchnce(P, solver_P, real_Y, fake_Y, device)
             epoch_loss_P += loss_P
 
-            n_iter += 1
             if n_iter % print_every == 0:
                 print("iteration: {}/{}, loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
-                      .format(n_iter, batch_size, loss_D, loss_G, loss_P))
+                      .format(n_batch, batch_size, loss_D, loss_G, loss_P))
 
         avg_loss_per_epoch["discriminator"].append(epoch_loss_D / batch_size)
         avg_loss_per_epoch["generator"].append(epoch_loss_G / batch_size)
