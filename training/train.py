@@ -48,7 +48,10 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400, lr=2e-3,
     # dictionary of losses per minibatch
     loss_histories = {"discriminator": [], "generator": [], "patchNCE": []}
 
+    # variables to print progress
     n_iter = 0
+    batch_size = len(X_dataloader)
+
     for epoch in tqdm(range(n_epochs)):
         print("Epoch {}/{}".format(epoch, n_epochs))
 
@@ -87,8 +90,8 @@ def train(X_dataloader, Y_dataloader, device="cpu", n_epochs=400, lr=2e-3,
 
             n_iter += 1
             if n_iter % print_every == 0:
-                print("iteration: {}, loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
-                      .format(n_iter, loss_D, loss_G, loss_P))
+                print("iteration: {}/{}, loss_D: {:e}, loss_G: {:e}, loss_P: {:e}"
+                      .format(n_iter, batch_size, loss_D, loss_G, loss_P))
 
     return D, G, P, loss_histories
 
