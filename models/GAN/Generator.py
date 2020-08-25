@@ -1,12 +1,7 @@
-import os, sys
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-
 import torch.nn as nn
 from .Encoder import Encoder
 from .Decoder import Decoder
-from blocks.types import PaddingMode
+from ..blocks.types import PaddingMode
 
 class Generator(nn.Module):
 

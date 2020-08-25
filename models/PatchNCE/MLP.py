@@ -1,11 +1,6 @@
-import os, sys
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-
 import torch.nn as nn
-from blocks.types import ActivationType
-from blocks.ActivationLayer import ActivationLayer
+from ..blocks.types import ActivationType
+from ..blocks.ActivationLayer import ActivationLayer
 
 class MLP(nn.Module):
     """ 2-layer fully-connected network which outputs 256-dim vector """
