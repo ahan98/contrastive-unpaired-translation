@@ -1,15 +1,11 @@
-import os, sys
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-
 import torch
 from torch.utils.data import DataLoader
+from training.checkpoint_utils import load_models_and_losses
 from training.train import train
+
 
 def test():
     batch_shape = (2, 3, 256, 256)
-    minibatch_size = 1
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     print("Using device:", device)
 
@@ -19,10 +15,13 @@ def test():
     Y_batch = torch.zeros(batch_shape)
     Y_dataloader = DataLoader(Y_batch, shuffle=True)
 
-    train(X_dataloader, Y_dataloader, n_epochs=1, device=device)
-
+    models_dict, loss_per_minibatch = load_models_and_losses(device=device)
+    train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
+          device=device, n_epochs=1, checkpoint_epoch=0)
+    print("Losses per minibatch", loss_per_minibatch)
     print("Train test passed")
     return True
+
 
 if __name__ == "__main__":
     test()

@@ -1,10 +1,6 @@
-import os, sys
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-
 import torch
 from training.trainers.PatchNCETrainer import PatchNCETrainer
+
 
 def test():
     N, C, S = 1, 64, 256
@@ -12,7 +8,8 @@ def test():
     feat_x = torch.zeros((N, C, S), device=device)
     feat_gx = torch.zeros((N, C, S), device=device)
     print("Using device", device)
-    loss = PatchNCETrainer._patchNCE_loss(feat_x, feat_gx, verbose=True, reduction="none", device=device)
+    loss = PatchNCETrainer._patchNCE_loss(
+        feat_x, feat_gx, verbose=True, reduction="none", device=device)
 
     expected_shape = torch.Size([N * S])
     if loss.shape != expected_shape:
@@ -21,6 +18,7 @@ def test():
 
     print("PatchNCE loss test passed")
     return True
+
 
 if __name__ == "__main__":
     test()
