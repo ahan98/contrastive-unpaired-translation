@@ -1,14 +1,9 @@
-import os, sys
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-
 import torch
 import torch.nn as nn
-from blocks.Conv2DBlock import Conv2DBlock
-from blocks.DownsamplingBlock import DownsamplingBlock
-from blocks.ResidualBlock import ResidualBlock
-from blocks.types import PaddingMode
+from ..blocks.Conv2DBlock import Conv2DBlock
+from ..blocks.DownsamplingBlock import DownsamplingBlock
+from ..blocks.ResidualBlock import ResidualBlock
+from ..blocks.types import PaddingMode
 
 
 class Encoder(nn.Module):

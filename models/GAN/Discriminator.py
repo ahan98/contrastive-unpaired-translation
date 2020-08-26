@@ -1,11 +1,6 @@
-import os, sys
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-
 import torch.nn as nn
-from blocks.types import PaddingMode, NormType, ActivationType
-from blocks.Conv2DBlock import Conv2DBlock
+from ..blocks.types import PaddingMode, NormType, ActivationType
+from ..blocks.Conv2DBlock import Conv2DBlock
 
 class Discriminator(nn.Module):
     """

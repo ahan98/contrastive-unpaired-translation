@@ -1,10 +1,6 @@
-import os, sys
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-
 import torch
 from models.GAN.Decoder import Decoder
+
 
 def test():
     in_N, in_C, in_H, in_W = 1, 256, 64, 64
@@ -26,6 +22,7 @@ def test():
 
     print("Decoder test passed")
     return True
+
 
 if __name__ == "__main__":
     test()
