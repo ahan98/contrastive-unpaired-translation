@@ -1,5 +1,6 @@
 import torch
 
+
 class GANTrainer:
 
     criterion = torch.nn.MSELoss()
@@ -16,33 +17,33 @@ class GANTrainer:
         - [torch.optim] solver - gradient optimizer
         - [torch.Tensor] real_data - tensor of sample from real dataset
         """
-        solver.zero_grad()  # reset gradients
-        criterion = torch.nn.MSELoss()
 
-        # Train on real Data
+        # Reset gradients and allow backprop to discriminator
+        solver.zero_grad()
+
+        # Train on real data
         prediction_real = discriminator(real_data)
         target_real = torch.ones(prediction_real.shape, device=device)
-        # Calculate error and backpropagate
         loss_real = GANTrainer.criterion(prediction_real, target_real)
-        loss_real.backward()
 
         # Generate fake data
         noise = torch.randn(real_data.shape, device=device)
-        fake_data = generator(noise).detach()
+        fake_data = generator(noise).detach()  # NOTE: don't backprop generator
 
         # Train on fake data
         prediction_fake = discriminator(fake_data)
         target_fake = torch.zeros(prediction_fake.shape, device=device)
-        # Calculate error and backpropagate
         loss_fake = GANTrainer.criterion(prediction_fake, target_fake)
-        loss_fake.backward()
 
-        solver.step()  # update parameters
+        # Compute gradients and update parameters
+        loss_average = 0.5 * (loss_real + loss_fake)
+        loss_average.backward()
+        solver.step()
 
-        return loss_real + loss_fake
+        return loss_average.item()
 
     @staticmethod
-    def train_generator(generator, discriminator, solver, real_data_shape,
+    def train_generator(generator, discriminator, solver, real_data,
                         device="cpu"):
         """
         Trains generator on fake data, and computes its loss.
@@ -60,11 +61,11 @@ class GANTrainer:
         solver.zero_grad()  # reset gradients
 
         # Generate fake data
-        noise = torch.randn(real_data_shape, device=device)
-        fake_data = generator(noise)  # here, we DO want loss to backprop
+        noise = torch.randn(real_data.shape, device=device)
+        fake_data = generator(noise)  # NOTE: allow backprop for generator
 
         # Train on fake data (only)
-        prediction_fake = discriminator(fake_data)
+        prediction_fake = discriminator(fake_data).detach()
         target_fake = torch.zeros(prediction_fake.shape, device=device)
         # Calculate error and backpropagate
         loss_fake = GANTrainer.criterion(prediction_fake, target_fake)
@@ -72,4 +73,4 @@ class GANTrainer:
 
         solver.step()
 
-        return loss_fake, fake_data
+        return loss_fake.item(), fake_data

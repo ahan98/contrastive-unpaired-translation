@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn.functional import cross_entropy
 
+
 class PatchNCETrainer:
     @staticmethod
     def train_patchnce(patchNCE, solver, real_data, fake_data, device="cpu"):
@@ -35,7 +36,9 @@ class PatchNCETrainer:
         loss.backward()
         solver.step()
 
-        return loss
+        average_loss_per_layer = loss.item() / len(real_features_dict)
+
+        return average_loss_per_layer
 
     @staticmethod
     def _patchNCE_loss(feat_x, feat_gx, device="cpu", tau=0.07,
@@ -96,7 +99,7 @@ class PatchNCETrainer:
         # vector of negative patches has shape (N,S,S), where the columns of
         # each SxS matrix denote the similarity scores between one negative
         # patch and the output patch.
-        pwc_negs = torch.bmm(feat_x.transpose(1,2), feat_gx)  # (N,S,S)
+        pwc_negs = torch.bmm(feat_x.transpose(1, 2), feat_gx)  # (N,S,S)
 
         # Broadcast SxS mask across all N matrices, where the diagonal is a
         # negative number that "zeros" out the diagonals of pwc_negs, since each
@@ -104,7 +107,8 @@ class PatchNCETrainer:
         # meaningless. Note that these diagonals are are not literally zeroed
         # out, but rather become a near-zero, positive value after
         # exponentiation from softmax cross entropy.
-        mask = torch.eye(S, dtype=torch.bool, device=device)[None, :, :]  # (1,S,S)
+        mask = torch.eye(S, dtype=torch.bool, device=device)[
+            None, :, :]  # (1,S,S)
         pwc_negs.masked_fill_(mask, float("-inf"))
 
         # torch.cat appends each length-S column vector in pwc_pos to the
