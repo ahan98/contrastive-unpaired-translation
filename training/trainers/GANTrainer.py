@@ -43,7 +43,7 @@ class GANTrainer:
         return loss_average.item()
 
     @staticmethod
-    def train_generator(generator, discriminator, solver, real_data,
+    def train_generator(generator, discriminator, solver, real_data_shape,
                         device="cpu"):
         """
         Trains generator on fake data, and computes its loss.
@@ -61,7 +61,7 @@ class GANTrainer:
         solver.zero_grad()  # reset gradients
 
         # Generate fake data
-        noise = torch.randn(real_data.shape, device=device)
+        noise = torch.randn(real_data_shape, device=device)
         fake_data = generator(noise)  # NOTE: allow backprop for generator
 
         # Train on fake data (only)
