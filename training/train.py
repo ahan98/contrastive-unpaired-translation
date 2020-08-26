@@ -80,21 +80,24 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
             loss_per_minibatch["patchNCE"].append(loss_patchNCE)
 
             # print the first minibatch, then every `print_every` minibatches
-            if print_every and (not n_batch) or ((n_batch + 1) % print_every == 0):
+            if print_every and (n_batch == 0) or ((n_batch + 1) % print_every == 0):
                 print(("Iteration {}/{}, loss_discriminator: {:e},"
                        "loss_generator: {:e}, loss_patchNCE: {:e}")
                       .format(n_batch + 1, batch_size, loss_discriminator,
                               loss_generator, loss_patchNCE))
 
-        # save model params every `checkpoint_epoch` epochs
-        if checkpoint_epoch and ((epoch + 1) % checkpoint_epoch == 0):
-            print("Saving model checkpoints after {} epochs...".format(epoch + 1))
-            models_dict = {
-                "discriminator": (discriminator, solver_discriminator),
-                "generator": (generator, solver_generator),
-                "patchNCE": (patchNCE, solver_patchNCE)
-            }
-            save_models(models_dict, epoch + 1)
+        # update model checkpoints after every epoch
+        models_dict = {
+            "discriminator": (discriminator, solver_discriminator),
+            "generator": (generator, solver_generator),
+            "patchNCE": (patchNCE, solver_patchNCE)
+        }
 
-            print("Saving losses...")
+        # save checkpoints every `checkpoint_epoch` epochs
+        if checkpoint_epoch and ((epoch + 1) % checkpoint_epoch == 0):
+            save_models(models_dict, epoch + 1)
             save_losses(loss_per_minibatch, epoch + 1)
+
+    # since models_dict is updated every epoch, we are returning the model
+    # states after all training is done
+    return models_dict, loss_per_minibatch

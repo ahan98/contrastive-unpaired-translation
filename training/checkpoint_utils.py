@@ -70,6 +70,7 @@ def _load_states(states, model, solver):
 
 
 def save_models(models_dict, epoch):
+    print("Saving model checkpoints after", epoch, "epochs...")
     for model_name, model_solver in models_dict.items():
         model, solver = model_solver
         state = {
@@ -82,4 +83,5 @@ def save_models(models_dict, epoch):
 
 
 def save_losses(loss_per_minibatch, epoch):
+    print("Saving losses after", epoch, "epochs...")
     torch.save(loss_per_minibatch, "checkpoint_losses_{}.pt".format(epoch))
