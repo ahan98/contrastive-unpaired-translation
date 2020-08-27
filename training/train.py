@@ -50,6 +50,8 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
                 GANTrainer.train_discriminator(generator, discriminator,
                                                solver_discriminator, real_X,
                                                device)
+            loss_discriminator.backward()
+            solver_discriminator.step()
 
             # shutoff backprop for discriminator while training generator
             set_requires_grad(discriminator, False)
@@ -82,9 +84,10 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
             loss_patchNCE_Y = \
                 PatchNCETrainer.train_patchnce(patchNCE, solver_patchNCE,
                                                real_Y, fake_Y, device)
-
             loss_patchNCE_total = loss_patchNCE_X + loss_patchNCE_Y
-            loss_patchNCE_total.backward()
+
+            loss_generator += loss_patchNCE_total
+            loss_generator.backward()
 
             loss_discriminator = loss_discriminator.item()
             loss_generator = loss_generator.item()

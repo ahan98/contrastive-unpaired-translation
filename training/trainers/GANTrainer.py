@@ -37,8 +37,8 @@ class GANTrainer:
 
         # Compute gradients and update parameters
         loss_average = 0.5 * (loss_real + loss_fake)
-        loss_average.backward()
-        solver.step()
+        # loss_average.backward()
+        # solver.step()
 
         return loss_average
 
@@ -67,10 +67,10 @@ class GANTrainer:
         # Train on fake data (only)
         prediction_fake = discriminator(fake_data)
         target_fake = torch.zeros(prediction_fake.shape, device=device)
+
         # Calculate error and backpropagate
         loss_fake = GANTrainer.criterion(prediction_fake, target_fake)
-        loss_fake.backward()
-
-        solver.step()
+        # loss_fake.backward()
+        # solver.step()
 
         return loss_fake, fake_data

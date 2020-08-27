@@ -33,10 +33,9 @@ class PatchNCETrainer:
             loss += PatchNCETrainer._patchNCE_loss(real_features, fake_features,
                                                    device)
 
-        loss.backward()
-        solver.step()
-
         average_loss_per_layer = loss / len(real_features_dict)
+        # loss.backward()
+        # solver.step()
 
         return average_loss_per_layer
 
