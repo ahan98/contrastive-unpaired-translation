@@ -25,6 +25,7 @@ class GANTrainer:
         prediction_real = discriminator(real_data)
         target_real = torch.ones(prediction_real.shape, device=device)
         loss_real = GANTrainer.criterion(prediction_real, target_real)
+        loss_real_weighted = loss_real.mean()
 
         # Generate fake data
         noise = torch.randn(real_data.shape, device=device)
@@ -34,13 +35,12 @@ class GANTrainer:
         prediction_fake = discriminator(fake_data)
         target_fake = torch.zeros(prediction_fake.shape, device=device)
         loss_fake = GANTrainer.criterion(prediction_fake, target_fake)
+        loss_fake_weighted = loss_fake.mean()
 
-        # Compute gradients and update parameters
-        loss_average = 0.5 * (loss_real + loss_fake)
-        # loss_average.backward()
-        # solver.step()
+        # Average real and fake loss
+        weighted_average_loss = 0.5 * (loss_real_weighted + loss_fake_weighted)
 
-        return loss_average
+        return weighted_average_loss
 
     @staticmethod
     def train_generator(generator, discriminator, solver, real_data_shape,
@@ -68,9 +68,7 @@ class GANTrainer:
         prediction_fake = discriminator(fake_data)
         target_fake = torch.zeros(prediction_fake.shape, device=device)
 
-        # Calculate error and backpropagate
-        loss_fake = GANTrainer.criterion(prediction_fake, target_fake)
-        # loss_fake.backward()
-        # solver.step()
+        # Calculate fake loss
+        loss_fake = GANTrainer.criterion(prediction_fake, target_fake).mean()
 
         return loss_fake, fake_data

@@ -84,9 +84,9 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
             loss_patchNCE_Y = \
                 PatchNCETrainer.train_patchnce(patchNCE, solver_patchNCE,
                                                real_Y, fake_Y, device)
-            loss_patchNCE_total = loss_patchNCE_X + loss_patchNCE_Y
+            loss_patchNCE_average = 0.5 * (loss_patchNCE_X + loss_patchNCE_Y)
 
-            loss_generator_total = loss_generator + loss_patchNCE_total
+            loss_generator_total = loss_generator + loss_patchNCE_average
             loss_generator_total.backward()
             solver_generator.step()
             solver_patchNCE.step()

@@ -26,18 +26,17 @@ class PatchNCETrainer:
         # loss for each layer's features.
         real_features_dict = patchNCE(real_data)
         fake_features_dict = patchNCE(fake_data)
-        loss = 0
+        total_nce_loss = 0
         for layer_key in real_features_dict:
             real_features = real_features_dict[layer_key]
             fake_features = fake_features_dict[layer_key]
-            loss += PatchNCETrainer._patchNCE_loss(real_features, fake_features,
-                                                   device)
+            loss = PatchNCETrainer._patchNCE_loss(real_features, fake_features,
+                                                  device)
+            total_nce_loss += loss.mean()
 
-        average_loss_per_layer = loss / len(real_features_dict)
-        # loss.backward()
-        # solver.step()
+        average_nce_loss = total_nce_loss / len(real_features_dict)
 
-        return average_loss_per_layer
+        return average_nce_loss
 
     @staticmethod
     def _patchNCE_loss(feat_x, feat_gx, device="cpu", tau=0.07,
