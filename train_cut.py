@@ -7,7 +7,6 @@ from training.checkpoint_utils import save_models, save_losses
 
 parser = init_parser()
 args = parser.parse_args()
-# parser.print_help()
 
 if args.device:
     device = args.device
@@ -27,19 +26,29 @@ Y_train_dataloader = make_dataloader(batches_by_class, Y_class_name,
                                      replacement=True)
 
 # Hyperparameters
-lr_D = args.lr_D if args.lr_D else 8e-8
-lr_G = args.lr_G if args.lr_G else 5e-7
-lr_P = args.lr_P if args.lr_P else 2e-3
+lr_D = args.D if args.D else 8e-8
+lr_G = args.G if args.G else 5e-7
+lr_P = args.P if args.P else 2e-3
 
 # init models
 print("Initializing models...")
+checkpoint_files_dict = None
+if args.load:
+    checkpoint_files_dict = {
+        "loss": args.loadLoss,
+        "discriminator": args.loadD,
+        "generator": args.loadG,
+        "patchNCE": args.loadP
+    }
+
 models_dict, loss_per_minibatch = \
     load_models_and_losses(lr_discriminator=lr_D, lr_generator=lr_G,
-                           lr_patchNCE=lr_P, device=device)
+                           lr_patchNCE=lr_P, device=device,
+                           checkpoint_files_dict=checkpoint_files_dict)
 
 n_epochs = args.epochs if args.epochs else 400
 print_every = args.print if args.print else len(X_train_dataloader)
-checkpoint_epoch = args.checkpoint if args.checkpoint else 0
+checkpoint_epoch = args.save if args.save else 0
 
 models_dict, loss_per_minibatch = \
     train(models_dict, loss_per_minibatch, X_train_dataloader,
