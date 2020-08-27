@@ -40,7 +40,7 @@ class GANTrainer:
         loss_average.backward()
         solver.step()
 
-        return loss_average.item()
+        return loss_average
 
     @staticmethod
     def train_generator(generator, discriminator, solver, real_data_shape,
@@ -73,5 +73,4 @@ class GANTrainer:
 
         solver.step()
 
-        return loss_fake.item(), fake_data
-
+        return loss_fake, fake_data

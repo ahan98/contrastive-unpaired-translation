@@ -42,19 +42,28 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
         for n_batch, real_X in enumerate(X_dataloader):
             real_X = real_X.to(device)
 
-            # train discriminator
+            # make sure discriminator requires grad before training
             set_requires_grad(discriminator, True)
-            loss_discriminator = GANTrainer.train_discriminator(
-                generator, discriminator, solver_discriminator, real_X, device)
+
+            # train discriminator
+            loss_discriminator = \
+                GANTrainer.train_discriminator(generator, discriminator,
+                                               solver_discriminator, real_X,
+                                               device)
+
+            # shutoff backprop for discriminator while training generator
+            set_requires_grad(discriminator, False)
 
             # train generator
-            set_requires_grad(discriminator, False)
-            loss_generator, fake_X = GANTrainer.train_generator(
-                generator, discriminator, solver_generator, real_X.shape, device)
+            loss_generator, fake_X = \
+                GANTrainer.train_generator(generator, discriminator,
+                                           solver_generator, real_X.shape,
+                                           device)
 
             # train PatchNCE
-            loss_patchNCE_X = PatchNCETrainer.train_patchnce(
-                patchNCE, solver_patchNCE, real_X, fake_X, device)
+            loss_patchNCE_X = \
+                PatchNCETrainer.train_patchnce(patchNCE, solver_patchNCE,
+                                               real_X, fake_X, device)
 
             # get random sample from Y, treating it as the "real" data
             try:
@@ -70,10 +79,16 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
             # from Y dataset
             noise = torch.randn(real_Y.shape, device=device)
             fake_Y = generator(noise)
-            loss_patchNCE_Y = PatchNCETrainer.train_patchnce(
-                patchNCE, solver_patchNCE, real_Y, fake_Y, device)
+            loss_patchNCE_Y = \
+                PatchNCETrainer.train_patchnce(patchNCE, solver_patchNCE,
+                                               real_Y, fake_Y, device)
 
             loss_patchNCE_total = loss_patchNCE_X + loss_patchNCE_Y
+            loss_patchNCE_total.backward()
+
+            loss_discriminator = loss_discriminator.item()
+            loss_generator = loss_generator.item()
+            loss_patchNCE_total = loss_patchNCE_total.item()
 
             loss_per_minibatch["discriminator"].append(loss_discriminator)
             loss_per_minibatch["generator"].append(loss_generator)
@@ -81,7 +96,7 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
 
             # print the first minibatch, then every `print_every` minibatches
             if print_every and (n_batch == 0) or ((n_batch + 1) % print_every == 0):
-                print(("Iteration {}/{}, loss_discriminator: {:e},"
+                print(("Iteration {}/{}, loss_discriminator: {:e}, "
                        "loss_generator: {:e}, loss_patchNCE: {:e}")
                       .format(n_batch + 1, batch_size, loss_discriminator,
                               loss_generator, loss_patchNCE_total))

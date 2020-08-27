@@ -33,12 +33,12 @@ lr_P = args.P if args.P else 2e-3
 # init models
 print("Initializing models...")
 checkpoint_files_dict = None
-if args.load:
+if args.loadD and args.loadG and args.loadP and args.loadLoss:
     checkpoint_files_dict = {
-        "loss": args.loadLoss,
         "discriminator": args.loadD,
         "generator": args.loadG,
-        "patchNCE": args.loadP
+        "patchNCE": args.loadP,
+        "loss": args.loadLoss
     }
 
 models_dict, loss_per_minibatch = \
