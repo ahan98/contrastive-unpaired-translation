@@ -22,7 +22,6 @@ class GANTrainer:
         solver.zero_grad()
 
         # Train on real data
-        GANTrainer.set_requires_grad(discriminator, True)
         prediction_real = discriminator(real_data)
         target_real = torch.ones(prediction_real.shape, device=device)
         loss_real = GANTrainer.criterion(prediction_real, target_real)
@@ -66,7 +65,6 @@ class GANTrainer:
         fake_data = generator(noise)  # NOTE: allow backprop for generator
 
         # Train on fake data (only)
-        GANTrainer.set_requires_grad(discriminator, False)
         prediction_fake = discriminator(fake_data)
         target_fake = torch.zeros(prediction_fake.shape, device=device)
         # Calculate error and backpropagate
@@ -77,7 +75,3 @@ class GANTrainer:
 
         return loss_fake.item(), fake_data
 
-    @staticmethod
-    def set_requires_grad(network, requires_grad):
-        for param in network.parameters():
-            param.requires_grad = requires_grad

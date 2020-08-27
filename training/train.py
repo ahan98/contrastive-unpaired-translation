@@ -43,10 +43,12 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
             real_X = real_X.to(device)
 
             # train discriminator
+            set_requires_grad(discriminator, True)
             loss_discriminator = GANTrainer.train_discriminator(
                 generator, discriminator, solver_discriminator, real_X, device)
 
             # train generator
+            set_requires_grad(discriminator, False)
             loss_generator, fake_X = GANTrainer.train_generator(
                 generator, discriminator, solver_generator, real_X.shape, device)
 
@@ -99,3 +101,8 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
     # since models_dict is updated every epoch, we are returning the model
     # states after all training is done
     return models_dict, loss_per_minibatch
+
+
+def set_requires_grad(network, requires_grad):
+    for param in network.parameters():
+        param.requires_grad = requires_grad

@@ -36,10 +36,10 @@ def make_dataloader(batches_by_class, class_name, image_size=256,
     if replacement:
         sampler = RandomSampler(batch, replacement=True)
         dataloader = DataLoader(batch, batch_size=minibatch_size,
-                                sampler=sampler, num_workers=10)
+                                sampler=sampler, num_workers=8)
     else:
         dataloader = DataLoader(batch, shuffle=True, batch_size=minibatch_size,
-                                num_workers=10)
+                                num_workers=8)
 
     return dataloader
 
