@@ -93,18 +93,18 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
 
             loss_discriminator = loss_discriminator.item()
             loss_generator_total = loss_generator_total.item()
-            loss_patchNCE_total = loss_patchNCE_total.item()
+            loss_patchNCE_average = loss_patchNCE_average.item()
 
             loss_per_minibatch["discriminator"].append(loss_discriminator)
             loss_per_minibatch["generator"].append(loss_generator_total)
-            loss_per_minibatch["patchNCE"].append(loss_patchNCE_total)
+            loss_per_minibatch["patchNCE"].append(loss_patchNCE_average)
 
             # print the first minibatch, then every `print_every` minibatches
             if print_every and (n_batch == 0) or ((n_batch + 1) % print_every == 0):
                 print(("Iteration {}/{}, loss_discriminator: {:e}, "
                        "loss_generator: {:e}, loss_patchNCE: {:e}")
                       .format(n_batch + 1, batch_size, loss_discriminator,
-                              loss_generator_total, loss_patchNCE_total))
+                              loss_generator_total, loss_patchNCE_average))
 
         # update model checkpoints after every epoch
         models_dict = {
