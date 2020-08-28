@@ -14,9 +14,11 @@ class Encoder(nn.Module):
 
         self.sample_size = sample_size
 
-        self.conv = Conv2DBlock(out_channels=64, kernel_size=7, padding=3,
-                                batch_momentum=batch_momentum,
-                                padding_mode=padding_mode)
+        self.conv = nn.Sequential([
+            nn.ReflectionPad2d(3),
+            Conv2DBlock(out_channels=64, kernel_size=7, padding=0,
+                        batch_momentum=batch_momentum)
+        ])
 
         self.dsample1 = DownsamplingBlock(in_channels=64, out_channels=128,
                                           batch_momentum=batch_momentum,
@@ -51,19 +53,23 @@ class Encoder(nn.Module):
         # print("shape after reflect and first conv", out.shape)
 
         out = self.dsample1(out)
-        samples["dsample1"] = Encoder.__make_samples_for_tensor(out, self.sample_size)
+        samples["dsample1"] = Encoder.__make_samples_for_tensor(
+            out, self.sample_size)
         # print("shape after first downsample", out.shape)
 
         out = self.dsample2(out)
-        samples["dsample2"] = Encoder.__make_samples_for_tensor(out, self.sample_size)
+        samples["dsample2"] = Encoder.__make_samples_for_tensor(
+            out, self.sample_size)
         # print("shape after second downsample", out.shape)
 
         for block_idx, res_block in enumerate(self.res_blocks):
             out = res_block(out)
             if block_idx == 0:
-                samples["res_block0"] = Encoder.__make_samples_for_tensor(out, self.sample_size)
+                samples["res_block0"] = Encoder.__make_samples_for_tensor(
+                    out, self.sample_size)
             elif block_idx == 4:
-                samples["res_block4"] = Encoder.__make_samples_for_tensor(out, self.sample_size)
+                samples["res_block4"] = Encoder.__make_samples_for_tensor(
+                    out, self.sample_size)
             # print("shape after res block", block_idx, out.shape)
 
         return out, samples
