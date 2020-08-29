@@ -15,13 +15,13 @@ class ResidualBlock(nn.Module):
         model = [
             PadLayer(padding_mode=padding_mode),
 
-            Conv2DBlock(in_channels=in_channels, out_channels=256,
+            Conv2DBlock(in_channels=in_channels, out_channels=256, padding=0,
                         batch_momentum=batch_momentum, norm_type=NormType.BATCH,
                         activation_type=ActivationType.RELU),
 
             PadLayer(padding_mode=padding_mode),
 
-            Conv2DBlock(in_channels=256, out_channels=in_channels,
+            Conv2DBlock(in_channels=256, out_channels=in_channels, padding=0,
                         batch_momentum=batch_momentum, norm_type=NormType.BATCH,
                         activation_type=ActivationType.NONE)
         ]
