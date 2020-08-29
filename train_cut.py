@@ -26,8 +26,8 @@ Y_train_dataloader = make_dataloader(batches_by_class, Y_class_name,
                                      replacement=True)
 
 # Hyperparameters
-lr_D = args.D if args.D else 8e-8
-lr_G = args.G if args.G else 5e-7
+lr_D = args.D if args.D else 2e-3
+lr_G = args.G if args.G else 2e-3
 lr_P = args.P if args.P else 2e-3
 
 # init models
