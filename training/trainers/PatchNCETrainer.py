@@ -26,9 +26,9 @@ class PatchNCETrainer:
         feat_gx = patchNCE(fake_samples)
 
         total_nce_loss = 0
-        for layer_key in feat_x:
-            real_sample = feat_x[layer_key]
-            fake_sample = feat_gx[layer_key]
+        for idx, sample in enumerate(real_samples):
+            real_sample = feat_x[idx]
+            fake_sample = feat_gx[idx]
             loss = PatchNCETrainer._patchNCE_loss(fake_sample, real_sample,
                                                   device)
             total_nce_loss += loss.mean()
