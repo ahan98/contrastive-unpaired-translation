@@ -9,7 +9,7 @@ from .ActivationLayer import ActivationLayer
 class Conv2DBlock(nn.Module):
     def __init__(self, in_channels=3, out_channels=256, kernel_size=3, stride=1,
                  padding=1, batch_momentum=0.1, norm_type=NormType.INSTANCE,
-                 activation_type=ActivationType.RELU, device="cpu"):
+                 activation_type=ActivationType.RELU):
 
         super().__init__()
 

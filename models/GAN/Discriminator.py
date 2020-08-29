@@ -1,6 +1,7 @@
 import torch.nn as nn
-from ..blocks.types import PaddingMode, NormType, ActivationType
+from ..blocks.types import NormType, ActivationType
 from ..blocks.Conv2DBlock import Conv2DBlock
+
 
 class Discriminator(nn.Module):
     """
@@ -13,27 +14,24 @@ class Discriminator(nn.Module):
     slope of 0.2. The discriminator architecture is: C64-C128-C256-C512
     """
 
-    def __init__(self, batch_momentum=0.1, padding_mode=PaddingMode.REFLECT):
+    def __init__(self, batch_momentum=0.1):
         super().__init__()
 
         def patchGANConvLayer(in_channels, out_channels, stride, norm_type):
-            return Conv2DBlock(in_channels=in_channels, stride=stride,
-                               out_channels=out_channels, kernel_size=4,
+            return Conv2DBlock(in_channels, out_channels, stride=stride,
                                activation_type=ActivationType.LEAKY_RELU,
-                               padding_mode=padding_mode, norm_type=norm_type,
-                               batch_momentum=batch_momentum)
+                               norm_type=norm_type, kernel_size=4)
 
         model = [
-            patchGANConvLayer(in_channels=3, out_channels=64, stride=2, norm_type=NormType.NONE),
-            patchGANConvLayer(in_channels=64, out_channels=128, stride=2, norm_type=NormType.INSTANCE),
-            patchGANConvLayer(in_channels=128, out_channels=256, stride=2, norm_type=NormType.INSTANCE),
-            patchGANConvLayer(in_channels=256, out_channels=512, stride=1, norm_type=NormType.INSTANCE),
+            patchGANConvLayer(3, 64, 2, NormType.NONE),
+            patchGANConvLayer(64, 128, 2, NormType.INSTANCE),
+            patchGANConvLayer(128, 256, 2, NormType.INSTANCE),
+            patchGANConvLayer(256, 512, 1, NormType.INSTANCE),
 
             # convolve result into one-dimensional output
-            Conv2DBlock(in_channels=512, out_channels=1,
-                        kernel_size=4, padding_mode=padding_mode,
-                        activation_type=ActivationType.NONE,
-                        batch_momentum=batch_momentum)
+            Conv2DBlock(in_channels=512, out_channels=1, kernel_size=4,
+                        norm_type=NormType.NONE,
+                        activation_type=ActivationType.NONE)
         ]
 
         self.model = nn.Sequential(*model)
