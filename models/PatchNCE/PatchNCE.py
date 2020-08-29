@@ -9,16 +9,13 @@ class PatchNCE(nn.Module):
         super().__init__()
 
         self.l2norm = Normalize(norm_pow)
+        self.create_mlp = MLP
 
     def forward(self, samples):
         features_final = {}
-
-        def create_mlp(in_channels):
-            return MLP(in_channels=in_channels).cuda()
-
         for layer_name, features in samples.items():
             in_channels = features.shape[-1]
-            mlp = create_mlp(in_channels)
+            mlp = self.create_mlp(in_channels).cuda()
 
             features = mlp(features)
             features = self.l2norm(features)
