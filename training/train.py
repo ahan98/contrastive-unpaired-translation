@@ -45,7 +45,6 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
 
             real_X = real_X.to(device)
 
-            # get random sample from Y
             try:
                 real_Y = next(Y_iter).to(device)
             except StopIteration:
@@ -55,7 +54,7 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
 
             ### DISCRIMINATOR ###
 
-            fake_Y1 = generator(real_Y)
+            fake_Y1 = generator(real_X)
             fake_Y1_detached = fake_Y1.detach()
 
             # make sure discriminator requires grad before training
@@ -82,20 +81,14 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
 
             ### PATCHNCE ###
 
+            solver_patchNCE.zero_grad()
+
             # train PatchNCE
             loss_patchNCE_X = PatchNCETrainer.train_patchnce(patchNCE, real_X,
                                                              fake_Y1, device)
 
-            # get random sample from Y
-            try:
-                real_Y = next(Y_iter).to(device)
-            except StopIteration:
-                # reshuffle Dataloader if all samples have been used once
-                Y_iter = iter(Y_dataloader)
-                real_Y = next(Y_iter).to(device)
-
             fake_Y2 = generator(real_Y)
-            loss_patchNCE_Y = PatchNCETrainer.train_patchnce(patchNCE, fake_Y1,
+            loss_patchNCE_Y = PatchNCETrainer.train_patchnce(patchNCE, real_Y,
                                                              fake_Y2, device)
 
             loss_patchNCE_average = 0.5 * (loss_patchNCE_X + loss_patchNCE_Y)
