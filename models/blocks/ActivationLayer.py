@@ -10,14 +10,9 @@ class ActivationLayer(nn.Module):
             self.model = nn.ReLU()
         elif activation_type == ActivationType.TANH:
             self.model = nn.Tanh()
-        elif activation_type == ActivationType.LEAKY_RELU:
+        else:
             self.model = nn.LeakyReLU(0.2)
-        elif activation_type == ActivationType.NONE:
-            self.model = None
 
     def forward(self, x):
-        if self.model is None:
-            return x
-
         out = self.model(x)
         return out
