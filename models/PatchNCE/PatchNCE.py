@@ -5,10 +5,10 @@ from ..blocks.Normalize import Normalize
 
 class PatchNCE(nn.Module):
 
-    def __init__(self):
+    def __init__(self, norm_pow=2):
         super().__init__()
 
-        self.l2norm = Normalize(2)
+        self.l2norm = Normalize(norm_pow)
 
     def forward(self, samples):
         features_final = {}
