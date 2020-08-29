@@ -72,6 +72,7 @@ class Encoder(nn.Module):
         """
 
         samples = {}
+        out = x
 
         for layer_idx, layer_fn in enumerate(self.model):
             out = layer_fn(out)
