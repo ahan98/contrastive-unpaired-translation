@@ -16,7 +16,7 @@ def load_models_and_losses(lr_discriminator=2e-3, lr_generator=2e-3, lr_patchNCE
     # init models
     discriminator = Discriminator().to(device)
     generator = Generator().to(device)
-    patchNCE = PatchNCE(generator.encoder).to(device)
+    patchNCE = PatchNCE().to(device)
 
     # init Adam optimizers
     print("lr_discriminator = {:e}, lr_generator = {:e}, lr_patchNCE = {:e}"

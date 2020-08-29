@@ -5,10 +5,9 @@ from ..blocks.Normalize import Normalize
 
 class PatchNCE(nn.Module):
 
-    def __init__(self, encoder, image_height=256, image_width=256):
+    def __init__(self):
         super().__init__()
 
-        self.encoder = encoder
         self.l2norm = Normalize(2)
 
     def forward(self, samples):
