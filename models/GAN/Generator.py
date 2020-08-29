@@ -12,10 +12,10 @@ class Generator(nn.Module):
         super().__init__()
 
         if encoder is None:
-            encoder = Encoder(n_res_blocks, batch_momentum, padding_mode)
+            encoder = Encoder(n_res_blocks, padding_mode=padding_mode)
 
         if decoder is None:
-            decoder = Decoder(batch_momentum, padding_mode)
+            decoder = Decoder(padding_mode)
 
         self.encoder = encoder
         self.decoder = decoder
