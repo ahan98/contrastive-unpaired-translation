@@ -5,7 +5,7 @@ from torch.nn.functional import cross_entropy
 
 class PatchNCETrainer:
     @staticmethod
-    def train_patchnce(patchNCE, real_data, fake_data, device="cpu"):
+    def train_patchnce(patchNCE, generator, real_data, fake_data, device="cpu"):
         """
         Trains PatchNCE network on real and fake data, and computes its loss.
 
@@ -19,10 +19,12 @@ class PatchNCETrainer:
         - [float] PatchNCE loss
         """
 
-        # Pass real/fake data into generator once more, extracting intermediate
-        # outputs from the encoder.
-        feat_x = patchNCE(real_data)
-        feat_gx = patchNCE(fake_data)
+        real_samples = generator(real_data, encode_only=True)
+        fake_samples = generator(fake_data, encode_only=True)
+
+        feat_x = patchNCE(real_samples)
+        feat_gx = patchNCE(fake_samples)
+
         total_nce_loss = 0
         for layer_key in feat_x:
             real_sample = feat_x[layer_key]

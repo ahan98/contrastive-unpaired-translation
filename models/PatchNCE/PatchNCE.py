@@ -1,5 +1,6 @@
 import torch.nn as nn
 from .MLP import MLP
+from ..blocks.Normalize import Normalize
 
 
 class PatchNCE(nn.Module):
@@ -8,9 +9,9 @@ class PatchNCE(nn.Module):
         super().__init__()
 
         self.encoder = encoder
+        self.l2norm = Normalize(2)
 
-    def forward(self, x):
-        _, samples = self.encoder(x)
+    def forward(self, samples):
         features_final = {}
 
         def create_mlp(in_channels):
@@ -19,11 +20,10 @@ class PatchNCE(nn.Module):
         for layer_name, features in samples.items():
             in_channels = features.shape[-1]
             mlp = create_mlp(in_channels)
+
             features = mlp(features)
+            features = self.l2norm(features)
 
-            L2_norm = features.norm(p=2, dim=1, keepdim=True)  # L2 norm
-            features_norm = features.div(L2_norm + 1e-7)
-
-            features_final[layer_name] = features_norm
+            features_final[layer_name] = features
 
         return features_final

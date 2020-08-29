@@ -20,7 +20,9 @@ class Generator(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
 
-    def forward(self, x):
-        out, _ = self.encoder(x)
+    def forward(self, x, encode_only=False):
+        out, samples = self.encoder(x)
+        if encode_only:
+            return samples
         out = self.decoder(out)
         return out
