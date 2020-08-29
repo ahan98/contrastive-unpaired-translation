@@ -71,7 +71,7 @@ class Encoder(nn.Module):
         block. [...] For each layer’s features, we sample 256 random locations.
         """
 
-        samples = {}
+        samples = []
         out = x
 
         for layer_idx, layer_fn in enumerate(self.model):
@@ -79,23 +79,23 @@ class Encoder(nn.Module):
             if layer_idx == 0:
                 sample = Encoder.__make_samples_for_tensor(
                     out, self.sample_size)
-                samples["rgb"] = sample
+                samples.append(sample)
             elif layer_idx == 4:
                 sample = Encoder.__make_samples_for_tensor(
                     out, self.sample_size)
-                samples["dsample1"] = sample
+                samples.append(sample)
             elif layer_idx == 7:
                 sample = Encoder.__make_samples_for_tensor(
                     out, self.sample_size)
-                samples["dsample2"] = sample
+                samples.append(sample)
             elif layer_idx == 10:
                 sample = Encoder.__make_samples_for_tensor(
                     out, self.sample_size)
-                samples["res_block0"] = sample
+                samples.append(sample)
             elif layer_idx == 14:
                 sample = Encoder.__make_samples_for_tensor(
                     out, self.sample_size)
-                samples["res_block4"] = sample
+                samples.append(sample)
 
         return out, samples
 
