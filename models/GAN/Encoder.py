@@ -1,38 +1,65 @@
 import torch
 import torch.nn as nn
 from ..blocks.Conv2DBlock import Conv2DBlock
+from ..blocks.PadLayer import PadLayer
 from ..blocks.DownsamplingBlock import DownsamplingBlock
 from ..blocks.ResidualBlock import ResidualBlock
-from ..blocks.types import PaddingMode
+from ..blocks.NormLayer import NormLayer
+from ..blocks.ActivationLayer import ActivationLayer
+from ..blocks.types import PaddingMode, NormType, ActivationType
 
 
 class Encoder(nn.Module):
 
     def __init__(self, n_res_blocks=9, batch_momentum=0.1,
-                 padding_mode=PaddingMode.REFLECT, sample_size=256):
+                 activation_type=ActivationType.RELU,
+                 norm_type=NormType.INSTANCE, padding_mode=PaddingMode.REFLECT,
+                 sample_size=256):
         super().__init__()
 
         self.sample_size = sample_size
 
-        self.conv = nn.Sequential([
-            nn.ReflectionPad2d(3),
-            Conv2DBlock(out_channels=64, kernel_size=7, padding=0,
-                        batch_momentum=batch_momentum)
-        ])
+        use_bias = (norm_type == NormType.INSTANCE)
 
-        self.dsample1 = DownsamplingBlock(in_channels=64, out_channels=128,
-                                          batch_momentum=batch_momentum,
-                                          padding_mode=padding_mode)
+        ### CONV BLOCK ###
 
-        self.dsample2 = DownsamplingBlock(in_channels=128, out_channels=256,
-                                          batch_momentum=batch_momentum,
-                                          padding_mode=padding_mode)
+        model = [
+            PadLayer(padding=3, padding_mode=padding_mode),
+            nn.Conv2d(3, 64, kernel_size=7, stride=1,
+                      padding=0, bias=use_bias)
+        ]
 
-        res_blocks = []
+        # Norm layer
+        if norm_type != NormType.NONE:
+            model += [NormLayer(norm_type, 64, batch_momentum)]
+
+        # Activation layer
+        if activation_type != ActivationType.NONE:
+            model += [ActivationLayer(activation_type)]
+
+        ### DOWNSAMPLING BLOCKS ###
+
+        # First downsampling block
+        model += [nn.Conv2d(64, 128, kernel_size=3, stride=2, bias=use_bias)]
+        if norm_type != NormType.NONE:
+            model += [NormLayer(norm_type, 128, batch_momentum)]
+        if activation_type != ActivationType.NONE:
+            model += [ActivationLayer(activation_type)]
+
+        # Second downsampling block
+        model += [nn.Conv2d(128, 256, kernel_size=3, stride=2, bias=use_bias)]
+        if norm_type != NormType.NONE:
+            model += [NormLayer(norm_type, 256, batch_momentum)]
+        if activation_type != ActivationType.NONE:
+            model += [ActivationLayer(activation_type)]
+
+        ### RESIDUAL BLOCKS ###
+
         for _ in range(n_res_blocks):
-            res_blocks += [ResidualBlock(padding_mode=padding_mode,
-                                         batch_momentum=batch_momentum)]
-        self.res_blocks = nn.Sequential(*res_blocks)
+            model += [ResidualBlock(padding_mode=padding_mode,
+                                    batch_momentum=batch_momentum)]
+
+        self.model = nn.Sequential(*model)
 
     def forward(self, x):
         """
@@ -46,31 +73,28 @@ class Encoder(nn.Module):
 
         samples = {}
 
-        # sample RGB pixels
-        samples["rgb"] = Encoder.__make_samples_for_tensor(x, self.sample_size)
-
-        out = self.conv(x)
-        # print("shape after reflect and first conv", out.shape)
-
-        out = self.dsample1(out)
-        samples["dsample1"] = Encoder.__make_samples_for_tensor(
-            out, self.sample_size)
-        # print("shape after first downsample", out.shape)
-
-        out = self.dsample2(out)
-        samples["dsample2"] = Encoder.__make_samples_for_tensor(
-            out, self.sample_size)
-        # print("shape after second downsample", out.shape)
-
-        for block_idx, res_block in enumerate(self.res_blocks):
-            out = res_block(out)
-            if block_idx == 0:
-                samples["res_block0"] = Encoder.__make_samples_for_tensor(
+        for layer_idx, layer_fn in enumerate(self.model):
+            out = layer_fn(out)
+            if layer_idx == 0:
+                sample = Encoder.__make_samples_for_tensor(
                     out, self.sample_size)
-            elif block_idx == 4:
-                samples["res_block4"] = Encoder.__make_samples_for_tensor(
+                samples["rgb"] = sample
+            elif layer_idx == 4:
+                sample = Encoder.__make_samples_for_tensor(
                     out, self.sample_size)
-            # print("shape after res block", block_idx, out.shape)
+                samples["dsample1"] = sample
+            elif layer_idx == 7:
+                sample = Encoder.__make_samples_for_tensor(
+                    out, self.sample_size)
+                samples["dsample2"] = sample
+            elif layer_idx == 10:
+                sample = Encoder.__make_samples_for_tensor(
+                    out, self.sample_size)
+                samples["res_block0"] = sample
+            elif layer_idx == 14:
+                sample = Encoder.__make_samples_for_tensor(
+                    out, self.sample_size)
+                samples["res_block4"] = sample
 
         return out, samples
 

@@ -3,16 +3,19 @@ from .Encoder import Encoder
 from .Decoder import Decoder
 from ..blocks.types import PaddingMode
 
+
 class Generator(nn.Module):
 
-    def __init__(self, encoder=None, decoder=None, n_res_blocks=9, batch_momentum=0.1, padding_mode=PaddingMode.REFLECT):
+    def __init__(self, encoder=None, decoder=None, n_res_blocks=9,
+                 batch_momentum=0.1, padding_mode=PaddingMode.REFLECT):
+
         super().__init__()
 
         if encoder is None:
             encoder = Encoder(n_res_blocks, batch_momentum, padding_mode)
 
         if decoder is None:
-            decoder = Decoder(n_res_blocks, batch_momentum, padding_mode)
+            decoder = Decoder(batch_momentum, padding_mode)
 
         self.encoder = encoder
         self.decoder = decoder

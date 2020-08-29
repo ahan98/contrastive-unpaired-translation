@@ -1,34 +1,31 @@
 import torch.nn as nn
-from ..blocks.ResidualBlock import ResidualBlock
+from ..blocks.PadLayer import PadLayer
 from ..blocks.UpsamplingBlock import UpsamplingBlock
 from ..blocks.Conv2DBlock import Conv2DBlock
-from ..blocks.types import ActivationType, PaddingMode
+from ..blocks.types import ActivationType, NormType, PaddingMode
 
 
 class Decoder(nn.Module):
 
-    def __init__(self, n_res_blocks=9, batch_momentum=0.1, padding_mode=PaddingMode.REFLECT):
+    def __init__(self, padding_mode=PaddingMode.REFLECT, batch_momentum=0.1):
         super().__init__()
 
-        model = []
-
-        # Residual blocks
-        for _ in range(n_res_blocks):
-            model += [ResidualBlock(padding_mode=padding_mode,
-                                    batch_momentum=batch_momentum)]
-
-        model += [
+        model = [
             # Upsample blocks
             UpsamplingBlock(in_channels=256, out_channels=128,
                             batch_momentum=batch_momentum),
+
             UpsamplingBlock(in_channels=128, out_channels=64,
                             batch_momentum=batch_momentum),
 
+            # Pad layer
+            PadLayer(padding=3, padding_mode=padding_mode),
+
             # Output conv block
             Conv2DBlock(in_channels=64, out_channels=3, kernel_size=7,
-                        padding=3, batch_momentum=batch_momentum,
-                        activation_type=ActivationType.TANH,
-                        padding_mode=padding_mode)
+                        padding=0, batch_momentum=batch_momentum,
+                        norm_type=NormType.NONE,
+                        activation_type=ActivationType.TANH)
         ]
 
         self.model = nn.Sequential(*model)

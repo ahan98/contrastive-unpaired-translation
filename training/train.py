@@ -40,34 +40,12 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
         print("Epoch {}/{}".format(epoch + 1, n_epochs))
 
         for n_batch, real_X in enumerate(X_dataloader):
+
+            ### LOAD SAMPLES ###
+
             real_X = real_X.to(device)
 
-            # make sure discriminator requires grad before training
-            set_requires_grad(discriminator, True)
-
-            # train discriminator
-            loss_discriminator = \
-                GANTrainer.train_discriminator(generator, discriminator,
-                                               solver_discriminator, real_X,
-                                               device)
-            loss_discriminator.backward()
-            solver_discriminator.step()
-
-            # shutoff backprop for discriminator while training generator
-            set_requires_grad(discriminator, False)
-
-            # train generator
-            loss_generator, fake_X = \
-                GANTrainer.train_generator(generator, discriminator,
-                                           solver_generator, real_X.shape,
-                                           device)
-
-            # train PatchNCE
-            loss_patchNCE_X = \
-                PatchNCETrainer.train_patchnce(patchNCE, solver_patchNCE,
-                                               real_X, fake_X, device)
-
-            # get random sample from Y, treating it as the "real" data
+            # get random sample from Y
             try:
                 real_Y = next(Y_iter).to(device)
             except StopIteration:
@@ -75,18 +53,54 @@ def train(models_dict, loss_per_minibatch, X_dataloader, Y_dataloader,
                 Y_iter = iter(Y_dataloader)
                 real_Y = next(Y_iter).to(device)
 
-            real_Y = real_Y.to(device)
+            ### DISCRIMINATOR ###
 
-            # train PatchNCE again, this time comparing real and fake images
-            # from Y dataset
-            noise = torch.randn(real_Y.shape, device=device)
-            fake_Y = generator(noise)
-            loss_patchNCE_Y = \
-                PatchNCETrainer.train_patchnce(patchNCE, solver_patchNCE,
-                                               real_Y, fake_Y, device)
+            fake_Y1 = generator(real_Y)
+            fake_Y1_detached = fake_Y1.detach()
+
+            # make sure discriminator requires grad before training
+            set_requires_grad(discriminator, True)
+            solver_discriminator.zero_grad()
+
+            # train discriminator
+            loss_discriminator = \
+                GANTrainer.train_discriminator(discriminator, real_Y,
+                                               fake_Y1_detached, device)
+
+            loss_discriminator.backward()
+            solver_discriminator.step()
+
+            ### GENERATOR ###
+
+            # shutoff backprop for discriminator while training generator
+            set_requires_grad(discriminator, False)
+            solver_generator.zero_grad()
+
+            # train generator
+            loss_generator = GANTrainer.train_generator(discriminator, fake_Y1,
+                                                        device)
+
+            ### PATCHNCE ###
+
+            # train PatchNCE
+            loss_patchNCE_X = PatchNCETrainer.train_patchnce(patchNCE, real_X,
+                                                             fake_Y1, device)
+
+            # get random sample from Y
+            try:
+                real_Y = next(Y_iter).to(device)
+            except StopIteration:
+                # reshuffle Dataloader if all samples have been used once
+                Y_iter = iter(Y_dataloader)
+                real_Y = next(Y_iter).to(device)
+
+            fake_Y2 = generator(real_Y)
+            loss_patchNCE_Y = PatchNCETrainer.train_patchnce(patchNCE, fake_Y1,
+                                                             fake_Y2, device)
+
             loss_patchNCE_average = 0.5 * (loss_patchNCE_X + loss_patchNCE_Y)
-
             loss_generator_total = loss_generator + loss_patchNCE_average
+
             loss_generator_total.backward()
             solver_generator.step()
             solver_patchNCE.step()
