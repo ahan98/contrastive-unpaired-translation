@@ -1,24 +1,27 @@
-import torch.nn as nn
-from ..blocks.Normalize import Normalize
+import torch.nn
+import torch.optim
+import bbml.nn
+import bbml.models.training as training
 
 
-class PatchNCE(nn.Module):
+class PatchNCE(training.TrainableModel):
 
-    def __init__(self, nc=256):
-        super().__init__()
-
-        self.l2norm = Normalize(2)
+    def __init__(self, optimizer: torch.optim.Optimizer, nc=256):
+        self.l2norm = bbml.nn.NormalizeLayer(2)
         self.nc = nc
+        super().__init__(optimizer)
 
+    # Hmmmm what is this??? I'm going to assume this works but it needs to be rewritten
     def create_mlp(self, samples):
         for mlp_id, feat in enumerate(samples):
             input_nc = feat.shape[1]
-            mlp = nn.Sequential(*[nn.Linear(input_nc, self.nc), nn.ReLU(),
-                                  nn.Linear(self.nc, self.nc)])
+            mlp = torch.nn.Sequential(*[torch.nn.Linear(input_nc, self.nc),
+                                        torch.nn.ReLU(),
+                                        torch.nn.Linear(self.nc, self.nc)])
             mlp.cuda()
             for layer in mlp.children():
-                if isinstance(layer, nn.Linear):
-                    nn.init.normal_(layer.weight.data, 0.0, 0.02)
+                if isinstance(layer, torch.nn.Linear):
+                    torch.nn.init.normal_(layer.weight.data, 0.0, 0.02)
 
             setattr(self, 'mlp_%d' % mlp_id, mlp)
 

@@ -1,63 +1,37 @@
 import torch
 import torch.nn as nn
-from ..blocks.Conv2DBlock import Conv2DBlock
-from ..blocks.PadLayer import PadLayer
-from ..blocks.DownsamplingBlock import DownsamplingBlock
-from ..blocks.ResidualBlock import ResidualBlock
-from ..blocks.NormLayer import NormLayer
-from ..blocks.ActivationLayer import ActivationLayer
-from ..blocks.types import PaddingMode, NormType, ActivationType
+import bbml.nn
 
 
 class Encoder(nn.Module):
 
     def __init__(self, n_res_blocks=9, batch_momentum=0.1,
-                 activation_type=ActivationType.RELU,
-                 norm_type=NormType.INSTANCE, padding_mode=PaddingMode.REFLECT,
+                 activation_type=bbml.ActivationType.RELU,
+                 norm_type=bbml.NormType.INSTANCE, padding_mode=bbml.PaddingMode.REFLECT,
                  sample_size=256):
         super().__init__()
 
         self.sample_size = sample_size
 
-        use_bias = (norm_type == NormType.INSTANCE)
-
-        ### CONV BLOCK ###
-
         model = [
-            PadLayer(padding=3, padding_mode=padding_mode),
-            nn.Conv2d(3, 64, kernel_size=7, stride=1,
-                      padding=0, bias=use_bias)
+            bbml.nn.Pad2DLayer(padding=3, padding_mode=padding_mode),
+            bbml.nn.Conv2DBlock(in_channels=3, out_channels=64, kernel_size=7,
+                                stride=1, padding=0, batch_momentum=batch_momentum,
+                                norm_type=norm_type, activation_type=activation_type),
+
+            # Downsampling blocks
+            bbml.nn.Conv2DBlock(in_channels=64, out_channels=128, kernel_size=3,
+                                stride=2, padding=0, batch_momentum=batch_momentum,
+                                norm_type=norm_type, activation_type=activation_type),
+            bbml.nn.Conv2DBlock(in_channels=128, out_channels=256, kernel_size=3,
+                                stride=2, padding=0, batch_momentum=batch_momentum,
+                                norm_type=norm_type, activation_type=activation_type),
+
+            # Residual Blocks
+            bbml.nn.ResidualBlock(in_channels=26,
+                                  padding_mode=padding_mode,
+                                  batch_momentum=batch_momentum)
         ]
-
-        # Norm layer
-        if norm_type != NormType.NONE:
-            model += [NormLayer(norm_type, 64, batch_momentum)]
-
-        # Activation layer
-        if activation_type != ActivationType.NONE:
-            model += [ActivationLayer(activation_type)]
-
-        ### DOWNSAMPLING BLOCKS ###
-
-        # First downsampling block
-        model += [nn.Conv2d(64, 128, kernel_size=3, stride=2, bias=use_bias)]
-        if norm_type != NormType.NONE:
-            model += [NormLayer(norm_type, 128, batch_momentum)]
-        if activation_type != ActivationType.NONE:
-            model += [ActivationLayer(activation_type)]
-
-        # Second downsampling block
-        model += [nn.Conv2d(128, 256, kernel_size=3, stride=2, bias=use_bias)]
-        if norm_type != NormType.NONE:
-            model += [NormLayer(norm_type, 256, batch_momentum)]
-        if activation_type != ActivationType.NONE:
-            model += [ActivationLayer(activation_type)]
-
-        ### RESIDUAL BLOCKS ###
-
-        for _ in range(n_res_blocks):
-            model += [ResidualBlock(padding_mode=padding_mode,
-                                    batch_momentum=batch_momentum)]
 
         self.model = nn.Sequential(*model)
 

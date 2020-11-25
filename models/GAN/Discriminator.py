@@ -1,9 +1,9 @@
-import torch.nn as nn
-from ..blocks.types import NormType, ActivationType
-from ..blocks.Conv2DBlock import Conv2DBlock
+import torch.optim
+import bbml.models.training as training
+import bbml.nn
 
 
-class Discriminator(nn.Module):
+class Discriminator(training.TrainableModel):
     """
     From Section 7.2 of Zhu et al.:
 
@@ -14,28 +14,23 @@ class Discriminator(nn.Module):
     slope of 0.2. The discriminator architecture is: C64-C128-C256-C512
     """
 
-    def __init__(self, batch_momentum=0.1):
-        super().__init__()
-
-        def patchGANConvLayer(in_channels, out_channels, stride, norm_type):
-            return Conv2DBlock(in_channels, out_channels, stride=stride,
-                               activation_type=ActivationType.LEAKY_RELU,
-                               norm_type=norm_type, kernel_size=4)
+    def __init__(self, optimizer: torch.optim.Optimizer, batch_momentum=0.1):
+        def patch_gan_conv_layer(in_channels, out_channels, stride, norm_type):
+            return bbml.nn.Conv2DBlock(in_channels, out_channels, stride=stride,
+                                       activation_type=bbml.ActivationType.LEAKY_RELU,
+                                       norm_type=norm_type, kernel_size=4, batch_momentum=batch_momentum)
 
         model = [
-            patchGANConvLayer(3, 64, 2, NormType.NONE),
-            patchGANConvLayer(64, 128, 2, NormType.INSTANCE),
-            patchGANConvLayer(128, 256, 2, NormType.INSTANCE),
-            patchGANConvLayer(256, 512, 1, NormType.INSTANCE),
+            patch_gan_conv_layer(3, 64, 2, bbml.NormType.NONE),
+            patch_gan_conv_layer(64, 128, 2, bbml.NormType.INSTANCE),
+            patch_gan_conv_layer(128, 256, 2, bbml.NormType.INSTANCE),
+            patch_gan_conv_layer(256, 512, 1, bbml.NormType.INSTANCE),
 
             # convolve result into one-dimensional output
-            Conv2DBlock(in_channels=512, out_channels=1, kernel_size=4,
-                        norm_type=NormType.NONE,
-                        activation_type=ActivationType.NONE)
+            bbml.nn.Conv2DBlock(in_channels=512, out_channels=1, kernel_size=4,
+                                norm_type=bbml.NormType.NONE,
+                                activation_type=bbml.ActivationType.NONE,
+                                batch_momentum=batch_momentum)
         ]
 
-        self.model = nn.Sequential(*model)
-
-    def forward(self, x):
-        out = self.model(x)
-        return out
+        super().__init__(optimizer, torch.nn.Sequential(*model))
