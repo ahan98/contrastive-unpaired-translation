@@ -1,13 +1,14 @@
+from abc import ABC
 import torch
 import torch.nn as nn
 import bbml.nn
 
 
-class Encoder(nn.Module):
+class Encoder(nn.Module, ABC):
 
     def __init__(self, n_res_blocks=9, batch_momentum=0.1,
-                 activation_type=bbml.ActivationType.RELU,
-                 norm_type=bbml.NormType.INSTANCE, padding_mode=bbml.PaddingMode.REFLECT,
+                 activation_type=bbml.nn.ActivationType.RELU,
+                 norm_type=bbml.nn.NormType.INSTANCE, padding_mode=bbml.nn.PaddingMode.REFLECT,
                  sample_size=256):
         super().__init__()
 

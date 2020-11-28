@@ -1,79 +1,38 @@
 from typing import Any
-import bbml.models.training as training
-
 import torch.optim
 from torch.nn.functional import cross_entropy
-
-from .GAN import Generator, Discriminator
-from .PatchNCE import PatchNCE
+import bbml.models.training as training
 
 
-class PatchNCEGAN:
-    def __init__(self):
-        self.__generator = Generator(optimizer=torch.optim.Adam())
-        self.__discriminator = Discriminator(optimizer=torch.optim.Adam())
-        self.__patchNCE = PatchNCE(optimizer=torch.optim.Adam())
-
-    def start_training(self, context: training.TrainingSessionContext) -> training.TrainingSession:
-        return training.TrainingSession(context, [
-            _DiscriminatorTrainingStep(self.__generator, self.__discriminator),
-            _GeneratorTrainingStep(self.__generator, self.__discriminator, self.__patchNCE)
-        ])
-
-
-class _DiscriminatorTrainingStep(training.TrainingStep):
-
-    def __init__(self, generator: training.TrainableModel, discriminator: training.TrainableModel):
-        super().__init__()
-        self.__generator = generator
-        self.__discriminator = discriminator
-
-    def learn_mapping(self, x: Any, y: Any, context: training.TrainingSessionContext):
-        self.__discriminator.set_requires_grad(True)
-        self.__discriminator.optimizer().zero_grad()
-
-        # discriminator wants to learn to tell these apart
-        real_y = y
-        fake_y = self.__generator(x).detach()
-
-        prediction_real = self.__discriminator(real_y)
-        target_real = torch.ones(prediction_real.shape, device=context.device())
-        loss_real = torch.nn.MSELoss(prediction_real, target_real).mean()
-
-        prediction_fake = self.__discriminator(fake_y)
-        target_fake = torch.zeros(prediction_fake.shape, device=context.device())
-        loss_fake = torch.nn.MSELoss(prediction_fake, target_fake).mean()
-
-        total_loss = 0.5 * (loss_real + loss_fake)
-        total_loss.backward()
-        # TODO: this might be asynchronous
-        self.__discriminator.optimizer().step()
-
-        self.__discriminator.set_requires_grad(False)
-
-
-class _GeneratorTrainingStep(training.TrainingStep):
+class GeneratorOptimizationTask(training.OptimizationTask):
 
     def __init__(self,
-                 generator: training.TrainableModel,
                  discriminator: training.TrainableModel,
-                 patchNCE: training.TrainableModel):
+                 generator_ensemble: training.ModelOptimizerEnsemble,
+                 patchNCE_ensemble: training.ModelOptimizerEnsemble):
         super().__init__()
-        self.__generator = generator
+
         self.__discriminator = discriminator
-        self.__patchNCE = patchNCE
+        self.__generator_ensemble = generator_ensemble
+        self.__patchNCE_ensemble = patchNCE_ensemble
 
     def learn_mapping(self, x: Any, y: Any, context: training.TrainingSessionContext):
+        generator = self.__generator_ensemble.model()
+        generator_optimizer = self.__generator_ensemble.optimizer()
+
+        patchNCE = self.__patchNCE_ensemble.model()
+        patchNCE_optimizer = self.__patchNCE_ensemble.optimizer()
+
         # Generator Loss
-        self.__generator.zero_grad()
-        fake_y = self.__generator(x)
+        generator.zero_grad()
+        fake_y = generator(x)
         gen_loss = self.__generator_loss(x, context)
 
         # PatchNCE Loss
-        self.__patchNCE.zero_grad()
+        patchNCE.zero_grad()
         patchNCE_loss_x = self.__patchNCE_loss(x, fake_y, context)
 
-        fake_y = self.__generator(x)
+        fake_y = generator(x)
         patchNCE_loss_y = self.__patchNCE_loss(y, fake_y, context)
 
         patchNCE_loss_avg = 0.5 * (patchNCE_loss_x + patchNCE_loss_y)
@@ -81,8 +40,9 @@ class _GeneratorTrainingStep(training.TrainingStep):
         # Learn
         total_loss = patchNCE_loss_avg + gen_loss
         total_loss.backward()
-        self.__generator.optimizer().step()
-        self.__patchNCE.optimizer().step()
+
+        generator_optimizer.step()
+        patchNCE_optimizer.step()
 
     ''' PRIVATE '''
 
@@ -92,11 +52,14 @@ class _GeneratorTrainingStep(training.TrainingStep):
         return torch.nn.MSELoss(prediction_fake, target_fake).mean()
 
     def __patchNCE_loss(self, real_y: Any, fake_y: Any, context: training.TrainingSessionContext) -> Any:
-        real_samples = self.__generator(real_y, encode_only=True)
-        fake_samples = self.__generator(fake_y, encode_only=True)
+        generator = self.__generator_ensemble.model()
+        patchNCE = self.__patchNCE_ensemble.model()
 
-        feat_x = self.__patchNCE(real_samples)
-        feat_gx = self.__patchNCE(fake_samples)
+        real_samples = generator(real_y, encode_only=True)
+        fake_samples = generator(fake_y, encode_only=True)
+
+        feat_x = patchNCE(real_samples)
+        feat_gx = patchNCE(fake_samples)
 
         total_nce_loss = 0
         for idx, sample in enumerate(real_samples):

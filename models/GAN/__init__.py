@@ -1,5 +1,5 @@
-from .Encoder import Encoder
-from .Decoder import Decoder
+from .Encoder import *
+from .Decoder import *
 
-from .Generator import Generator
-from .Discriminator import Discriminator
+from .Generator import *
+from .Discriminator import *

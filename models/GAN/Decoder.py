@@ -4,7 +4,7 @@ import bbml.nn
 
 class Decoder(torch.nn.Module):
 
-    def __init__(self, padding_mode=bbml.PaddingMode.REFLECT, batch_momentum=0.1):
+    def __init__(self, padding_mode=bbml.nn.PaddingMode.REFLECT, batch_momentum=0.1):
         super().__init__()
 
         model = [
@@ -21,8 +21,8 @@ class Decoder(torch.nn.Module):
             # Output conv block
             bbml.nn.Conv2DBlock(in_channels=64, out_channels=3, kernel_size=7,
                                 padding=0, batch_momentum=batch_momentum,
-                                norm_type=bbml.NormType.NONE,
-                                activation_type=bbml.ActivationType.TANH)
+                                norm_type=bbml.nn.NormType.NONE,
+                                activation_type=bbml.nn.ActivationType.TANH)
         ]
 
         self.model = torch.nn.Sequential(*model)

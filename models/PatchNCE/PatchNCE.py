@@ -6,10 +6,10 @@ import bbml.models.training as training
 
 class PatchNCE(training.TrainableModel):
 
-    def __init__(self, optimizer: torch.optim.Optimizer, nc=256):
+    def __init__(self, nc=256):
         self.l2norm = bbml.nn.NormalizeLayer(2)
         self.nc = nc
-        super().__init__(optimizer)
+        super().__init__()
 
     # Hmmmm what is this??? I'm going to assume this works but it needs to be rewritten
     def create_mlp(self, samples):

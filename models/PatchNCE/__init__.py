@@ -1,1 +1,1 @@
-from .PatchNCE import PatchNCE
+from .PatchNCE import *
