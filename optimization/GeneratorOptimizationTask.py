@@ -8,31 +8,30 @@ class GeneratorOptimizationTask(training.OptimizationTask):
 
     def __init__(self,
                  discriminator: training.TrainableModel,
-                 generator_ensemble: training.ModelOptimizerEnsemble,
-                 patchNCE_ensemble: training.ModelOptimizerEnsemble):
+                 generator: training.TrainableModel,
+                 patchNCE: training.TrainableModel,
+                 generator_optimizer: training.ModelOptimizer,
+                 patchNCE_optimizer: training.ModelOptimizer):
         super().__init__()
 
         self.__discriminator = discriminator
-        self.__generator_ensemble = generator_ensemble
-        self.__patchNCE_ensemble = patchNCE_ensemble
+        self.generator = generator
+        self.patchNCE = patchNCE
+
+        self.generator_optimizer = generator_optimizer
+        self.patchNCE_optimizer = patchNCE_optimizer
 
     def learn_mapping(self, x: Any, y: Any, context: training.TrainingSessionContext):
-        generator = self.__generator_ensemble.model()
-        generator_optimizer = self.__generator_ensemble.optimizer()
-
-        patchNCE = self.__patchNCE_ensemble.model()
-        patchNCE_optimizer = self.__patchNCE_ensemble.optimizer()
-
         # Generator Loss
-        generator.zero_grad()
-        fake_y = generator(x)
+        self.generator.zero_grad()
+        fake_y = self.generator(x)
         gen_loss = self.__generator_loss(x, context)
 
         # PatchNCE Loss
-        patchNCE.zero_grad()
+        self.patchNCE.zero_grad()
         patchNCE_loss_x = self.__patchNCE_loss(x, fake_y, context)
 
-        fake_y = generator(x)
+        fake_y = self.generator(x)
         patchNCE_loss_y = self.__patchNCE_loss(y, fake_y, context)
 
         patchNCE_loss_avg = 0.5 * (patchNCE_loss_x + patchNCE_loss_y)
@@ -41,8 +40,8 @@ class GeneratorOptimizationTask(training.OptimizationTask):
         total_loss = patchNCE_loss_avg + gen_loss
         total_loss.backward()
 
-        generator_optimizer.step()
-        patchNCE_optimizer.step()
+        self.generator_optimizer.step()
+        self.patchNCE_optimizer.step()
 
     ''' PRIVATE '''
 
@@ -52,14 +51,12 @@ class GeneratorOptimizationTask(training.OptimizationTask):
         return torch.nn.MSELoss(prediction_fake, target_fake).mean()
 
     def __patchNCE_loss(self, real_y: Any, fake_y: Any, context: training.TrainingSessionContext) -> Any:
-        generator = self.__generator_ensemble.model()
-        patchNCE = self.__patchNCE_ensemble.model()
 
-        real_samples = generator(real_y, encode_only=True)
-        fake_samples = generator(fake_y, encode_only=True)
+        real_samples = self.generator(real_y, encode_only=True)
+        fake_samples = self.generator(fake_y, encode_only=True)
 
-        feat_x = patchNCE(real_samples)
-        feat_gx = patchNCE(fake_samples)
+        feat_x = self.patchNCE(real_samples)
+        feat_gx = self.patchNCE(fake_samples)
 
         total_nce_loss = 0
         for idx, sample in enumerate(real_samples):
