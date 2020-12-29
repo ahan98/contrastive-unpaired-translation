@@ -5,28 +5,30 @@ from .models.PatchNCE import *
 from .optimization.GeneratorOptimizationTask import *
 from .optimization.DiscriminatorOptimizationTask import *
 
-
-def make_PatchNCEGAN_training_session(epochs: int,
+def make_PatchNCEGAN_training_session(training_data: bbml.SafeTupleIterator,
+                                      epochs: int,
                                       device: torch.device,
                                       generator_learning_rate: float = 2e-3,
                                       discriminator_learning_rate: float = 2e-3,
                                       patchNCE_learning_rate: float = 2e-3) -> training.TrainingSession:
 
-
     # print_every = args.print if args.print else len(X_train_dataloader)
     # checkpoint_epoch = args.save if args.save else 0
-
-    training_context = training.TrainingSessionContext(None, epochs, device)
+    training_context = training.TrainingSessionContext(training_data, epochs, device)
 
     # Models
     generator = Generator(Encoder(), Decoder()).to(device)
-    generator_optimizer = training.ModelOptimizer(torch.optim.Adam(generator.parameters(), lr=generator_learning_rate))
+    generator_optimizer = training.ModelOptimizer("generator.optimizer",
+                                                  torch.optim.Adam(generator.parameters(), lr=generator_learning_rate))
 
     patchNCE = PatchNCE().to(device)
-    patchNCE_optimizer = training.ModelOptimizer(torch.optim.Adam(patchNCE.parameters(), lr=patchNCE_learning_rate))
+    patchNCE_optimizer = training.ModelOptimizer("patchNCE.optimizer",
+                                                 torch.optim.Adam(patchNCE.parameters(), lr=patchNCE_learning_rate))
 
     discriminator = Discriminator().to(device)
-    discriminator_optimizer = training.ModelOptimizer(torch.optim.Adam(discriminator.parameters(), lr=discriminator_learning_rate))
+    discriminator_optimizer = training.ModelOptimizer("discriminator.optimizer",
+                                                      torch.optim.Adam(discriminator.parameters(),
+                                                                       lr=discriminator_learning_rate))
 
     return training.TrainingSession(training_context, [
         DiscriminatorOptimizationTask(generator, discriminator, discriminator_optimizer),

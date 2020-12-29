@@ -6,8 +6,7 @@ import bbml.models.training as training
 
 class GeneratorOptimizationTask(training.OptimizationTask):
 
-    def __init__(self,
-                 discriminator: training.TrainableModel,
+    def __init__(self, discriminator: training.TrainableModel,
                  generator: training.TrainableModel,
                  patchNCE: training.TrainableModel,
                  generator_optimizer: training.ModelOptimizer,
@@ -67,8 +66,7 @@ class GeneratorOptimizationTask(training.OptimizationTask):
         average_nce_loss = total_nce_loss / len(feat_x)
         return average_nce_loss
 
-    def __patchNCE_loss_per_sample(self, feat_gx, feat_x, context: training.TrainingSessionContext,
-                                   tau=0.07) -> Any:
+    def __patchNCE_loss_per_sample(self, feat_gx, feat_x, context: training.TrainingSessionContext, tau=0.07) -> Any:
         """
         Computes the patchwise contrastive loss between sampled feature maps
         from H(G_enc(x)) and sampled feature maps from H(G_enc(G(x))).
