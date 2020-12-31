@@ -1,7 +1,8 @@
 from typing import Any
 import torch.optim
 from torch.nn.functional import cross_entropy
-import bbml.models.training as training
+import bbml.training as training
+import bbml.DataPersisting
 
 
 class GeneratorOptimizationTask(training.OptimizationTask):
@@ -127,3 +128,14 @@ class GeneratorOptimizationTask(training.OptimizationTask):
                                               dtype=torch.long,
                                               device=context.device()))
         return loss
+
+    def save_with_data_persister(self, directory: str, data_perister: bbml.DataPersisting):
+        data_perister.save_state(self.generator, directory, self.generator.identifier())
+        data_perister.save_state(self.generator_optimizer, directory, self.generator_optimizer.identifier())
+
+    def load_with_data_persister(self, directory: str, data_persister: bbml.DataPersisting):
+        generator_dict = data_persister.load_state("{}/{}".format(directory, self.generator.identifier()))
+        self.generator.load_state_from_dictionary(generator_dict)
+
+        generator_optimizer_dict = data_persister.load_state("{}/{}".format(directory, self.generator_optimizer.identifier()))
+        self.generator_optimizer.load_state_from_dictionary(generator_optimizer_dict)

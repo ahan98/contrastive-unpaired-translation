@@ -28,7 +28,7 @@ class TrainingData(bbml.SafeTupleIterator, ABC):
         class_names = image_folder.classes
         batches_by_class = defaultdict(list)
 
-        # TODO: hmm I kept the logic intact from the original version but we should rewrite this
+        # TODO: I kept the logic intact from the original version but we should rewrite this
         for image_PIL, class_index in image_folder:
             class_name = class_names[class_index]
             batches_by_class[class_name].append(image_PIL)

@@ -34,4 +34,4 @@ class Discriminator(training.TrainableModel, ABC):
                                 batch_momentum=batch_momentum)
         ]
 
-        super().__init__(torch.nn.Sequential(*model))
+        super().__init__("discriminator", torch.nn.Sequential(*model))

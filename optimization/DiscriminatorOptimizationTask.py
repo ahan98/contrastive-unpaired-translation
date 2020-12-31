@@ -1,5 +1,6 @@
 from typing import Any
-import bbml.models.training as training
+import bbml.training as training
+import bbml.DataPersisting
 import torch.optim
 
 
@@ -38,3 +39,14 @@ class DiscriminatorOptimizationTask(training.OptimizationTask):
         self.discriminator_optimizer.step()
 
         self.discriminator.set_requires_grad(False)
+
+    def save_with_data_persister(self, directory: str, data_perister: bbml.DataPersisting):
+        data_perister.save_state(self.discriminator, directory, self.discriminator.identifier())
+        data_perister.save_state(self.discriminator_optimizer, directory, self.discriminator_optimizer.identifier())
+
+    def load_with_data_persister(self, directory: str, data_persister: bbml.DataPersisting):
+        discriminator_dict = data_persister.load_state("{}/{}".format(directory, self.discriminator.identifier()))
+        self.discriminator.load_state_from_dictionary(discriminator_dict)
+
+        discriminator_optimizer_dict = data_persister.load_state("{}/{}".format(directory, self.discriminator_optimizer.identifier()))
+        self.discriminator_optimizer.load_state_from_dictionary(discriminator_optimizer_dict)
